@@ -1,13 +1,14 @@
 /**
- * /conseils — espace éditorial SEO (TDR §39).
+ * /conseils — espace éditorial SEO (TDR §39) : article à la une + grille d'articles.
  * @hopsyder
  */
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRightIcon, ClockIcon } from "@phosphor-icons/react/ssr";
 import { PageHero } from "@/components/sections/PageHero";
 import { CtaBand } from "@/components/sections/CtaBand";
-import { Stagger, StaggerItem } from "@/components/motion/Reveal";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { articles } from "@/lib/catalog/articles";
 
 export const metadata: Metadata = {
@@ -21,29 +22,34 @@ export default function TipsPage() {
   return (
     <>
       <PageHero eyebrow="Conseils" title="Bien choisir, bien construire." intro="Guides pratiques pour préparer vos achats et éviter les erreurs courantes." crumbs={[{ name: "Conseils", href: "/conseils" }]} />
-      <section className="py-16 md:py-24">
-        <div className="container-x">
-          <Link href={`/conseils/${first.slug}`} className="group grid gap-6 border-b border-line pb-12 md:grid-cols-2 md:items-center md:gap-12">
-            <div className="relative aspect-[16/10] overflow-hidden bg-paper-2">
-              <Image src={first.image} alt="" fill sizes="(min-width:768px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
-            </div>
-            <div>
-              <p className="eyebrow">{first.category} · {first.readingTime} min</p>
-              <h2 className="mt-4 font-display text-4xl font-bold uppercase md:text-6xl">{first.title}</h2>
-              <p className="mt-4 text-lg text-steel">{first.excerpt}</p>
-              <span className="mt-6 inline-block font-semibold underline underline-offset-4">Lire le guide</span>
-            </div>
-          </Link>
-          <Stagger className="mt-12 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="section">
+        <div className="shell">
+          <Reveal>
+            <Link href={`/conseils/${first.slug}`} className="group grid overflow-hidden rounded-[24px] border border-line bg-white shadow-[var(--shadow-card)] md:grid-cols-2">
+              <div className="relative min-h-[260px] overflow-hidden bg-paper-2">
+                <Image src={first.image} alt="" fill sizes="(min-width:768px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+              </div>
+              <div className="flex flex-col justify-center p-7 md:p-12">
+                <p className="flex items-center gap-3 text-sm text-steel"><span className="rounded-full bg-accent-soft px-3 py-1 font-semibold text-accent-2">À la une</span>{first.category}</p>
+                <h2 className="t-h2 mt-5">{first.title}</h2>
+                <p className="t-lead mt-4">{first.excerpt}</p>
+                <span className="mt-8 inline-flex items-center gap-2 font-semibold">Lire le guide <ArrowRightIcon size={16} weight="bold" className="text-accent-2 transition-transform group-hover:translate-x-1.5" /></span>
+              </div>
+            </Link>
+          </Reveal>
+
+          <Stagger className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((a) => (
               <StaggerItem key={a.slug}>
-                <Link href={`/conseils/${a.slug}`} className="group block">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-paper-2">
+                <Link href={`/conseils/${a.slug}`} className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-white shadow-[var(--shadow-card)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-paper-2">
                     <Image src={a.image} alt="" fill sizes="(min-width:1024px) 33vw, 50vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                   </div>
-                  <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-steel">{a.category} · {a.readingTime} min</p>
-                  <h2 className="mt-2 font-display text-2xl font-bold uppercase group-hover:underline group-hover:underline-offset-4">{a.title}</h2>
-                  <p className="mt-2 text-steel">{a.excerpt}</p>
+                  <div className="flex flex-1 flex-col p-6">
+                    <p className="flex items-center gap-2 text-sm text-steel">{a.category} <span className="text-steel-2">·</span> <ClockIcon size={14} /> {a.readingTime} min</p>
+                    <h2 className="t-h3 mt-2">{a.title}</h2>
+                    <p className="mt-2 flex-1 text-steel">{a.excerpt}</p>
+                  </div>
                 </Link>
               </StaggerItem>
             ))}

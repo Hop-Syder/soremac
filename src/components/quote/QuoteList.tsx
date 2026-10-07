@@ -7,7 +7,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { MinusIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react/ssr";
 import { useQuote, variantLabel } from "./QuoteProvider";
 import { EASE } from "@/components/motion/tokens";
 
@@ -28,19 +28,19 @@ export function QuoteList() {
           >
             <div className="flex gap-4 py-4">
               {i.category ? (
-                <Link href={`/produits/${i.category}/${i.slug}`} className="relative size-20 shrink-0 overflow-hidden rounded-[3px] bg-paper-2">
+                <Link href={`/produits/${i.category}/${i.slug}`} className="relative size-20 shrink-0 overflow-hidden rounded-[12px] bg-paper-2">
                   <Image src={i.image} alt="" fill sizes="80px" className="object-cover" />
                 </Link>
               ) : (
-                <span className="grid size-20 shrink-0 place-items-center rounded-[3px] bg-paper-2 text-[10px] font-semibold uppercase tracking-wider text-steel">Libre</span>
+                <span className="grid size-20 shrink-0 place-items-center rounded-[12px] bg-paper-2 text-[11px] font-semibold text-steel">Libre</span>
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{i.name}</p>
                 {Object.keys(i.variant).length > 0 && <p className="text-sm text-steel">{variantLabel(i.variant)}</p>}
                 <div className="mt-2.5 flex items-center justify-between">
-                  <div className="flex items-center rounded-[3px] border border-line bg-white">
+                  <div className="flex items-center rounded-[10px] border border-line bg-white">
                     <button className="grid size-9 place-items-center text-steel hover:text-ink" onClick={() => setQty(i.key, i.quantity - 1)} aria-label={`Diminuer la quantité de ${i.name}`}>
-                      <Minus size={14} />
+                      <MinusIcon size={14} weight="bold" />
                     </button>
                     <input
                       type="number"
@@ -52,12 +52,12 @@ export function QuoteList() {
                       aria-label={`Quantité de ${i.name}`}
                     />
                     <button className="grid size-9 place-items-center text-steel hover:text-ink" onClick={() => setQty(i.key, i.quantity + 1)} aria-label={`Augmenter la quantité de ${i.name}`}>
-                      <Plus size={14} />
+                      <PlusIcon size={14} weight="bold" />
                     </button>
                   </div>
                   <span className="text-xs text-steel">{i.unit}</span>
-                  <button onClick={() => remove(i.key)} className="grid size-9 place-items-center text-steel hover:text-red-700" aria-label={`Retirer ${i.name}`}>
-                    <Trash2 size={16} />
+                  <button onClick={() => remove(i.key)} className="grid size-9 place-items-center rounded-full text-steel hover:bg-red-50 hover:text-red-700" aria-label={`Retirer ${i.name}`}>
+                    <TrashIcon size={17} />
                   </button>
                 </div>
               </div>

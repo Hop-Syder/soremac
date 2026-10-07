@@ -1,6 +1,8 @@
 /**
- * Header (TDR §8) — Motion E : transparent sur le Hero, puis solide et compact au scroll.
- * Indicateur de page active partagé (layoutId) ; menu mobile en drawer.
+ * Header (TDR §8)
+ * Ligne 1 : bandeau d'information (graphite).  Ligne 2 : logo · navigation · recherche · WhatsApp · devis.
+ * Motion E : au scroll, le bandeau se replie et la barre devient compacte, opaque, avec bordure.
+ * Mobile : menu plein écran en drawer, actions principales toujours visibles.
  * @hopsyder
  */
 "use client";
@@ -9,140 +11,147 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
-import { Menu, Phone, UserRound } from "lucide-react";
+import { ClipboardTextIcon, ListIcon, MagnifyingGlassIcon, PhoneIcon, UserCircleIcon, ArrowRightIcon } from "@phosphor-icons/react/ssr";
 import { NAV, SITE } from "@/lib/site";
 import { whatsappGeneral } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/cn";
 import { Logo } from "./Logo";
-import { ButtonLink } from "@/components/ui/Button";
+import { ButtonLink, buttonClass } from "@/components/ui/Button";
 import { WhatsAppIcon } from "@/components/ui/icons";
 import { Drawer } from "@/components/ui/Drawer";
 import { useQuote } from "@/components/quote/QuoteProvider";
+import { useSearch } from "@/components/search/SearchProvider";
 import { EASE } from "@/components/motion/tokens";
 
 export function Header() {
   const pathname = usePathname();
-  const overHero = pathname === "/";
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   const [menu, setMenu] = useState(false);
   const { count, setOpen } = useQuote();
+  const search = useSearch();
 
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 24));
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 12));
   useEffect(() => setMenu(false), [pathname]);
 
-  const solid = !overHero || scrolled;
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
     <>
-      <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:bg-accent focus:px-4 focus:py-2 focus:text-ink">
+      <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2">
         Aller au contenu
       </a>
-      <header
-        className={cn(
-          "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,box-shadow] duration-300 ease-out",
-          solid ? "border-b border-line/80 bg-paper/92 shadow-[0_1px_0_rgba(0,0,0,0.02)] backdrop-blur-md" : "border-b border-transparent bg-transparent",
-        )}
-      >
-        {/* Ligne d'information — masquée une fois compact */}
+
+      <header className="fixed inset-x-0 top-0 z-50">
+        {/* Bandeau d'information */}
         <motion.div
           initial={false}
-          animate={{ height: scrolled ? 0 : 34, opacity: scrolled ? 0 : 1 }}
+          animate={{ height: scrolled ? 0 : 36 }}
           transition={{ duration: 0.3, ease: EASE }}
-          className={cn("hidden overflow-hidden text-[12px] lg:block", solid ? "text-steel" : "text-paper/75")}
+          className="hidden overflow-hidden bg-ink text-[12.5px] text-white/70 md:block"
         >
-          <div className="container-x flex h-[34px] items-center justify-between border-b border-current/10">
-            <p className="tracking-wide">Matériaux de construction · Vente détail & gros · Cotonou, depuis {SITE.foundedYear}</p>
-            <div className="flex items-center gap-5">
-              <a href={SITE.phoneHref} onClick={() => track("phone_click", { from: "topbar" })} className="inline-flex items-center gap-1.5 hover:text-accent">
-                <Phone size={12} /> {SITE.phone}
+          <div className="shell flex h-9 items-center justify-between">
+            <p>Matériaux de construction <span className="mx-2 text-white/25">•</span> Vente détail & gros <span className="mx-2 text-white/25">•</span> Cotonou</p>
+            <div className="flex items-center gap-6">
+              <a href={SITE.phoneHref} onClick={() => track("phone_click", { from: "topbar" })} className="inline-flex items-center gap-1.5 hover:text-white">
+                <PhoneIcon size={14} weight="fill" /> {SITE.phone}
               </a>
-              <a href={SITE.clientSpace} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-accent">
-                <UserRound size={12} /> Espace client
+              <a href={SITE.clientSpace} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-white">
+                <UserCircleIcon size={15} weight="fill" /> Espace client
               </a>
             </div>
           </div>
         </motion.div>
 
-        <motion.div
-          initial={false}
-          animate={{ height: scrolled ? 64 : 80 }}
-          transition={{ duration: 0.3, ease: EASE }}
-          className="container-x flex items-center justify-between gap-6"
+        {/* Barre principale */}
+        <div
+          className={cn(
+            "border-b transition-[background-color,border-color,box-shadow] duration-300",
+            scrolled ? "border-line bg-white/90 shadow-[0_8px_30px_-18px_rgb(20_22_26/0.25)] backdrop-blur-xl" : "border-transparent bg-paper/0",
+          )}
         >
-          <Logo tone={solid ? "dark" : "light"} />
+          <motion.div initial={false} animate={{ height: scrolled ? 64 : 76 }} transition={{ duration: 0.3, ease: EASE }} className="shell flex items-center gap-6">
+            <Logo />
 
-          <nav aria-label="Navigation principale" className="hidden lg:block">
-            <ul className="flex items-center gap-1">
-              {NAV.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={isActive(item.href) ? "page" : undefined}
-                    className={cn(
-                      "relative block px-3.5 py-2 text-[14px] font-medium transition-colors",
-                      solid ? "text-ink/75 hover:text-ink" : "text-paper/80 hover:text-paper",
-                      isActive(item.href) && (solid ? "text-ink!" : "text-paper!"),
-                    )}
-                  >
-                    {item.label}
-                    {isActive(item.href) && (
-                      <motion.span layoutId="nav-active" className="absolute inset-x-3.5 -bottom-0.5 h-[2px] bg-accent" transition={{ duration: 0.35, ease: EASE }} />
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+            <nav aria-label="Navigation principale" className="ml-4 hidden lg:block">
+              <ul className="flex items-center gap-1">
+                {NAV.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={isActive(item.href) ? "page" : undefined}
+                      className={cn("relative block whitespace-nowrap rounded-lg px-3 py-2 text-[15px] font-medium transition-colors", isActive(item.href) ? "text-ink" : "text-steel hover:text-ink")}
+                    >
+                      {isActive(item.href) && (
+                        <motion.span layoutId="nav-pill" className="absolute inset-0 -z-10 rounded-lg bg-ink/[0.06]" transition={{ duration: 0.35, ease: EASE }} />
+                      )}
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-          <div className="flex items-center gap-2">
-            <ButtonLink
-              href={whatsappGeneral()}
-              variant="outline"
-              size="sm"
-              className={cn("max-md:hidden", !solid && "text-paper")}
-              onClick={() => track("whatsapp_click", { from: "header" })}
-            >
-              <WhatsAppIcon size={16} className="text-whatsapp" /> WhatsApp
-            </ButtonLink>
-            <ButtonLink href="/devis" size="sm" className="max-md:hidden">
-              Demander un devis
-              {count > 0 && <span className="tabular -mr-1 grid size-5 place-items-center rounded-full bg-ink text-[11px] text-paper">{count}</span>}
-            </ButtonLink>
-            <button
-              onClick={() => setMenu(true)}
-              className={cn("grid size-11 place-items-center rounded-full lg:hidden", solid ? "text-ink" : "text-paper")}
-              aria-label="Ouvrir le menu"
-            >
-              <Menu size={22} />
-            </button>
-          </div>
-        </motion.div>
+            <div className="ml-auto flex items-center gap-2">
+              {/* Recherche rapide */}
+              <button
+                onClick={search.open}
+                className="hidden h-10 items-center gap-2.5 rounded-[10px] border border-line bg-white pl-3 pr-2 text-sm text-steel transition-colors hover:border-ink/30 md:flex 2xl:w-56"
+                aria-label="Rechercher un produit"
+              >
+                <MagnifyingGlassIcon size={18} />
+                <span className="hidden 2xl:inline">Rechercher…</span>
+                <kbd className="ml-auto hidden rounded-md bg-paper px-1.5 py-0.5 text-[11px] font-medium 2xl:inline">⌘K</kbd>
+              </button>
+              <button onClick={search.open} className="grid size-10 place-items-center rounded-[10px] text-ink md:hidden" aria-label="Rechercher">
+                <MagnifyingGlassIcon size={22} />
+              </button>
+
+              <a
+                href={whatsappGeneral()}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track("whatsapp_click", { from: "header" })}
+                className={cn(buttonClass("outline", "sm"), "max-xl:hidden")}
+              >
+                <WhatsAppIcon size={17} className="text-whatsapp" /> WhatsApp
+              </a>
+              <ButtonLink href="/devis" size="sm" className="max-sm:hidden">
+                Demander un devis
+                {count > 0 && <span className="tabular grid size-5 place-items-center rounded-full bg-ink text-[11px] text-white">{count}</span>}
+              </ButtonLink>
+              <button onClick={() => setMenu(true)} className="grid size-10 place-items-center rounded-[10px] text-ink lg:hidden" aria-label="Ouvrir le menu">
+                <ListIcon size={24} />
+              </button>
+            </div>
+          </motion.div>
+        </div>
       </header>
 
-      {/* Menu mobile — Motion G slide-in */}
-      <Drawer open={menu} onOpenChange={setMenu} title="Menu" side="left">
-        <nav aria-label="Navigation mobile" className="px-5 py-4">
-          <ul>
+      {/* Menu mobile — Motion G */}
+      <Drawer open={menu} onOpenChange={setMenu} title="Menu" side="right">
+        <nav aria-label="Navigation mobile" className="flex h-full flex-col px-5 py-4">
+          <ul className="grid gap-1">
             {NAV.map((item, i) => (
-              <motion.li key={item.href} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.08 + i * 0.05, duration: 0.35, ease: EASE }}>
+              <motion.li key={item.href} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06 + i * 0.04, duration: 0.35, ease: EASE }}>
                 <Link
                   href={item.href}
-                  className={cn("flex items-baseline justify-between border-b border-line py-4 font-display text-3xl font-bold uppercase [font-stretch:85%]", isActive(item.href) ? "text-accent-2" : "text-ink")}
+                  className={cn("flex items-center justify-between rounded-xl px-4 py-3.5 font-display text-2xl font-semibold tracking-tight", isActive(item.href) ? "bg-white text-ink shadow-[var(--shadow-card)]" : "text-ink/80")}
                 >
                   {item.label}
-                  <span className="tabular text-xs font-medium text-steel">0{i + 1}</span>
+                  <ArrowRightIcon size={18} className="text-steel-2" />
                 </Link>
               </motion.li>
             ))}
           </ul>
-          <div className="mt-8 grid gap-3">
-            <ButtonLink href="/devis" size="lg" onClick={() => setMenu(false)}>Demander un devis</ButtonLink>
+          <div className="mt-auto grid gap-2.5 pt-8">
+            <ButtonLink href="/devis" size="lg">Demander un devis</ButtonLink>
             <ButtonLink href={whatsappGeneral()} variant="whatsapp" size="lg"><WhatsAppIcon /> WhatsApp</ButtonLink>
-            <button onClick={() => { setMenu(false); setOpen(true); }} className="mt-2 text-left text-sm text-steel">Voir ma sélection ({count})</button>
-            <a href={SITE.clientSpace} className="text-sm text-steel" target="_blank" rel="noopener noreferrer">Espace client →</a>
+            <div className="mt-3 flex items-center justify-between text-sm text-steel">
+              <button onClick={() => { setMenu(false); setOpen(true); }} className="inline-flex items-center gap-1.5"><ClipboardTextIcon size={16} /> Ma sélection ({count})</button>
+              <a href={SITE.clientSpace} target="_blank" rel="noopener noreferrer">Espace client</a>
+            </div>
           </div>
         </nav>
       </Drawer>

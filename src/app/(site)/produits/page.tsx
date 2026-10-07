@@ -3,6 +3,7 @@
  * @hopsyder
  */
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PageHero } from "@/components/sections/PageHero";
@@ -17,26 +18,30 @@ export const metadata: Metadata = {
 };
 
 export default async function CatalogPage() {
-  const { categories, products: published } = await getCatalog();
+  const { categories, products } = await getCatalog();
   return (
     <>
       <PageHero
-        eyebrow={`${published.length} références en ligne · ${categories.length} familles`}
+        eyebrow={`${products.length} références en ligne · ${categories.length} familles`}
         title="Catalogue SOREMAC"
         intro="Explorez nos matériaux, équipements et produits pour tous vos projets de construction."
         crumbs={[{ name: "Produits", href: "/produits" }]}
       >
-        <nav aria-label="Familles de produits" className="no-scrollbar -mx-4 mt-10 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+        {/* Navigation par familles — vignettes */}
+        <nav aria-label="Familles de produits" className="no-scrollbar -mx-5 mt-10 flex gap-3 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
           {categories.map((c) => (
-            <Link key={c.slug} href={`/produits/${c.slug}`} className="shrink-0 border border-paper/15 px-3.5 py-2 text-sm text-paper/80 transition-colors hover:border-accent hover:text-paper">
-              {c.name}
+            <Link key={c.slug} href={`/produits/${c.slug}`} className="group flex shrink-0 items-center gap-3 rounded-[14px] border border-line bg-white p-2 pr-4 transition-colors hover:border-ink/30">
+              <span className="relative size-11 overflow-hidden rounded-[10px] bg-paper-2">
+                {c.image && <Image src={c.image} alt="" fill sizes="44px" className="object-cover" />}
+              </span>
+              <span className="text-sm font-medium">{c.shortName}</span>
             </Link>
           ))}
         </nav>
       </PageHero>
-      <section className="container-x py-8 md:py-14">
+      <section className="shell py-10 md:py-14">
         <Suspense>
-          <CatalogExplorer products={published} categories={categories} />
+          <CatalogExplorer products={products} categories={categories} />
         </Suspense>
       </section>
       <CtaBand title="Vous ne trouvez pas votre référence ?" text="Notre catalogue en ligne s'enrichit progressivement. Envoyez-nous votre liste : nous vérifions la disponibilité pour vous." />

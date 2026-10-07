@@ -1,14 +1,15 @@
 /**
- * /produits/[categorie]/[produit] — FICHE PRODUIT, composant central (TDR §24–31).
- * Galerie · infos · variantes · caractéristiques · description éditoriale ·
- * conseil · produits associés · JSON-LD Product.
+ * FICHE PRODUIT — composant central du projet (TDR §24–31).
+ * Galerie · informations & variantes · description éditoriale (Présentation, Utilisation,
+ * Caractéristiques, Conseils, Documents) · « Besoin d'un conseil ? » · produits associés · JSON-LD Product.
  * @hopsyder
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { FileText } from "lucide-react";
+import { FilePdfIcon } from "@phosphor-icons/react/ssr";
 import { Breadcrumb } from "@/components/sections/Breadcrumb";
+import { SectionHeader } from "@/components/sections/SectionHeader";
 import { Gallery } from "@/components/product/Gallery";
 import { ProductConfigurator } from "@/components/product/ProductConfigurator";
 import { ProductCard } from "@/components/catalog/ProductCard";
@@ -19,6 +20,7 @@ import { productUrl } from "@/lib/catalog/products";
 import { findCategory, findProduct, getCatalog, relatedTo } from "@/lib/catalog/repo";
 import { JsonLd, productLd } from "@/lib/seo";
 import { whatsappProduct } from "@/lib/whatsapp";
+import { SITE } from "@/lib/site";
 
 type Props = { params: Promise<{ categorie: string; produit: string }> };
 
@@ -41,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: p.seoTitle ? { absolute: `${p.seoTitle} | SOREMAC` } : `${p.name} — ${cat?.name} à Cotonou`,
     description: p.seoDescription ?? `${p.summary} Disponible chez SOREMAC à Cotonou. Prix sur demande, devis rapide sur WhatsApp.`,
     alternates: { canonical: productUrl(p) },
-    openGraph: { images: [{ url: p.gallery[0].src, alt: p.gallery[0].alt }] },
+    openGraph: { images: p.gallery[0] ? [{ url: p.gallery[0].src, alt: p.gallery[0].alt }] : [] },
   };
 }
 
@@ -56,115 +58,137 @@ export default async function ProductPage({ params }: Props) {
     ...Object.entries(p.specs),
     ...(p.brand && !p.specs.Marque ? [["Marque", p.brand] as [string, string]] : []),
     ...(p.packaging ? [["Conditionnement", p.packaging] as [string, string]] : []),
+    ...p.variants.map((a) => [`${a.label} disponibles`, `${a.options.join(" · ")}${a.unit ? ` ${a.unit}` : ""}`] as [string, string]),
     ["Catégorie", cat.name],
   ];
-
   const sections = [
     { id: "presentation", title: "Présentation", body: p.presentation },
     { id: "utilisation", title: "Utilisation", body: p.usage },
     { id: "conseils", title: "Conseils", body: p.advice },
   ].filter((s) => s.body);
+  const toc = [...sections.slice(0, 2), { id: "caracteristiques", title: "Caractéristiques" }, ...sections.slice(2), ...(p.documents?.length ? [{ id: "documents", title: "Documents" }] : [])];
 
   return (
     <>
       <JsonLd data={productLd(p)} />
-      <div className="container-x pb-16 pt-24 md:pt-32">
-        <Breadcrumb items={[{ name: "Produits", href: "/produits" }, { name: cat.name, href: `/produits/${cat.slug}` }, { name: p.name, href: productUrl(p) }]} />
 
-        <div className="mt-6 grid gap-8 lg:mt-10 lg:grid-cols-[1.25fr_1fr] lg:gap-14">
-          <Gallery images={p.gallery} name={p.name} />
+      {/* Galerie + achat */}
+      <section className="pb-16 pt-28 md:pt-36">
+        <div className="shell">
+          <Breadcrumb items={[{ name: "Produits", href: "/produits" }, { name: cat.name, href: `/produits/${cat.slug}` }, { name: p.name, href: productUrl(p) }]} />
+          <div className="mt-6 grid gap-8 lg:mt-8 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+            <Gallery images={p.gallery} name={p.name} />
 
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-steel">
-              {cat.name}{p.subcategory ? ` · ${p.subcategory}` : ""}
-            </p>
-            <h1 className="mt-3 text-[clamp(2.6rem,5vw,4.5rem)] font-extrabold uppercase">{p.name}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {p.brand && <span className="border border-ink px-2 py-0.5 text-xs font-bold uppercase tracking-wider">{p.brand}</span>}
-              {p.badge && <span className="bg-accent px-2 py-0.5 text-xs font-bold uppercase tracking-wider">{p.badge}</span>}
-            </div>
-            <p className="mt-5 text-lg text-steel">{p.summary}</p>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-white px-3 py-1 text-[13px] font-medium text-steel ring-1 ring-line">{cat.name}{p.subcategory ? ` · ${p.subcategory}` : ""}</span>
+                {p.badge && <span className="rounded-full bg-accent-soft px-3 py-1 text-[13px] font-semibold text-accent-2">{p.badge}</span>}
+              </div>
+              <h1 className="t-h1 mt-5">{p.name}</h1>
+              {p.brand && <p className="mt-3 text-[15px] text-steel">Marque : <span className="font-semibold text-ink">{p.brand}</span></p>}
+              <p className="t-lead mt-4">{p.summary}</p>
 
-            {/* Caractéristiques principales en grille compacte */}
-            <dl className="mt-6 grid grid-cols-2 gap-px border border-line bg-line">
-              {Object.entries(p.specs).slice(0, 4).map(([k, v]) => (
-                <div key={k} className="bg-white px-4 py-3">
-                  <dt className="text-[11px] uppercase tracking-[0.14em] text-steel">{k}</dt>
-                  <dd className="tabular mt-0.5 font-semibold">{v}</dd>
-                </div>
-              ))}
-            </dl>
+              {Object.keys(p.specs).length > 0 && (
+                <dl className="mt-7 grid grid-cols-2 gap-2">
+                  {Object.entries(p.specs).slice(0, 4).map(([k, v]) => (
+                    <div key={k} className="rounded-[14px] border border-line bg-white px-4 py-3">
+                      <dt className="text-xs text-steel">{k}</dt>
+                      <dd className="tabular mt-0.5 font-semibold">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
 
-            <div className="mt-8">
-              <Suspense>
-                <ProductConfigurator product={p} />
-              </Suspense>
+              <div className="mt-8 border-t border-line pt-8">
+                <Suspense>
+                  <ProductConfigurator product={p} />
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Description éditoriale + tableau des caractéristiques */}
-      <section className="border-t border-line bg-white py-16 md:py-24">
-        <div className="container-x grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-20">
-          <div className="grid gap-10">
-            {sections.map((s) => (
+      {/* Description éditoriale */}
+      <section className="section border-t border-line bg-white">
+        <div className="shell grid gap-10 lg:grid-cols-[220px_1fr] lg:gap-16">
+          <nav aria-label="Sommaire du produit" className="hidden lg:block">
+            <ul className="sticky top-28 grid gap-1 text-[15px]">
+              {toc.map((t) => (
+                <li key={t.id}><a href={`#${t.id}`} className="block rounded-lg px-3 py-2 text-steel transition-colors hover:bg-paper hover:text-ink">{t.title}</a></li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="grid max-w-3xl gap-14">
+            {sections.slice(0, 2).map((s) => (
               <Reveal key={s.id}>
-                <h2 id={s.id} className="font-display text-3xl font-bold uppercase">{s.title}</h2>
-                <p className="mt-3 max-w-xl text-lg leading-relaxed text-ink/80">{s.body}</p>
+                <h2 id={s.id} className="t-h3 scroll-mt-28">{s.title}</h2>
+                <p className="mt-3 text-[17px] leading-relaxed text-ink/80">{s.body}</p>
               </Reveal>
             ))}
+
+            <Reveal>
+              <h2 id="caracteristiques" className="t-h3 scroll-mt-28">Caractéristiques</h2>
+              <div className="mt-4 overflow-hidden rounded-[16px] border border-line">
+                <table className="w-full text-left text-[15px]">
+                  <tbody>
+                    {specs.map(([k, v], i) => (
+                      <tr key={k} className={i % 2 ? "bg-white" : "bg-paper/60"}>
+                        <th scope="row" className="w-2/5 px-5 py-3.5 font-medium text-steel">{k}</th>
+                        <td className="tabular px-5 py-3.5 font-semibold">{v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-sm text-steel">Informations communiquées à titre indicatif. Notre équipe confirme caractéristiques et disponibilité lors du devis.</p>
+            </Reveal>
+
+            {sections.slice(2).map((s) => (
+              <Reveal key={s.id}>
+                <h2 id={s.id} className="t-h3 scroll-mt-28">{s.title}</h2>
+                <p className="mt-3 text-[17px] leading-relaxed text-ink/80">{s.body}</p>
+              </Reveal>
+            ))}
+
             {p.documents?.length ? (
               <Reveal>
-                <h2 className="font-display text-3xl font-bold uppercase">Documents</h2>
-                <ul className="mt-3 grid gap-2">
+                <h2 id="documents" className="t-h3 scroll-mt-28">Documents</h2>
+                <ul className="mt-4 grid gap-2">
                   {p.documents.map((d) => (
-                    <li key={d.href}><a href={d.href} className="inline-flex items-center gap-2 underline underline-offset-4"><FileText size={16} /> {d.label}</a></li>
+                    <li key={d.href}>
+                      <a href={d.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-[14px] border border-line p-4 font-medium hover:border-ink/30">
+                        <FilePdfIcon size={24} weight="duotone" className="text-accent-2" /> {d.label}
+                      </a>
+                    </li>
                   ))}
                 </ul>
               </Reveal>
             ) : null}
           </div>
-          <Reveal>
-            <h2 className="font-display text-3xl font-bold uppercase">Caractéristiques</h2>
-            <table className="mt-4 w-full border-collapse text-left">
-              <tbody>
-                {specs.map(([k, v]) => (
-                  <tr key={k} className="border-b border-line">
-                    <th scope="row" className="w-2/5 py-3.5 pr-4 text-sm font-medium text-steel">{k}</th>
-                    <td className="tabular py-3.5 font-semibold">{v}</td>
-                  </tr>
-                ))}
-                {p.variants.map((a) => (
-                  <tr key={a.key} className="border-b border-line">
-                    <th scope="row" className="py-3.5 pr-4 text-sm font-medium text-steel">{a.label} disponibles</th>
-                    <td className="tabular py-3.5 font-semibold">{a.options.join(" · ")}{a.unit && a.key !== "grade" ? ` ${a.unit}` : ""}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="mt-4 text-xs text-steel">Informations communiquées à titre indicatif. Notre équipe confirme les caractéristiques et la disponibilité lors du devis.</p>
-          </Reveal>
         </div>
       </section>
 
       {/* Besoin d'un conseil ? (TDR §30) */}
-      <section className="bg-ink py-14 text-paper md:py-20">
-        <Reveal className="container-x flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="font-display text-4xl font-bold uppercase md:text-5xl">Vous hésitez entre plusieurs références ?</h2>
-            <p className="mt-3 text-lg text-paper/70">Notre équipe peut vous orienter selon votre besoin.</p>
+      <section className="section">
+        <Reveal className="shell">
+          <div className="flex flex-col gap-8 rounded-[24px] border border-line bg-white p-7 shadow-[var(--shadow-card)] md:flex-row md:items-center md:justify-between md:p-10">
+            <div>
+              <h2 className="t-h2">Vous hésitez entre plusieurs références ?</h2>
+              <p className="t-lead mt-3">Notre équipe peut vous orienter selon votre besoin. {SITE.phone}</p>
+            </div>
+            <ButtonLink href={whatsappProduct(p.name)} variant="whatsapp" size="lg" className="shrink-0"><WhatsAppIcon size={20} /> Parler à un conseiller</ButtonLink>
           </div>
-          <ButtonLink href={whatsappProduct(p.name)} variant="whatsapp" size="lg" className="shrink-0"><WhatsAppIcon /> Parler à un conseiller</ButtonLink>
         </Reveal>
       </section>
 
       {/* Produits associés (TDR §31) */}
       {related.length > 0 && (
-        <section className="py-16 md:py-24">
-          <div className="container-x">
-            <Reveal><h2 className="h-section">Vous pourriez aussi avoir besoin de…</h2></Reveal>
-            <Stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="section pt-0">
+          <div className="shell">
+            <SectionHeader eyebrow="Pour compléter votre chantier" title="Vous pourriez aussi avoir besoin de…" />
+            <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {related.map((r) => (
                 <StaggerItem key={r.slug} className="flex"><ProductCard product={r} className="w-full" /></StaggerItem>
               ))}

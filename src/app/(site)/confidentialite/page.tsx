@@ -15,9 +15,9 @@ export default function PrivacyPage() {
   return (
     <>
       <PageHero title="Politique de confidentialité" crumbs={[{ name: "Confidentialité", href: "/confidentialite" }]} />
-      <section className="container-x max-w-3xl py-16">
+      <section className="shell section">
         {blocks.map((b) => (
-          <div key={b.h} className="mb-8"><h2 className="font-display text-2xl font-bold uppercase">{b.h}</h2><p className="mt-2 text-ink/80">{b.t}</p></div>
+          <div key={b.h} className="mb-8"><h2 className="t-h3">{b.h}</h2><p className="mt-2 text-ink/80">{b.t}</p></div>
         ))}
       </section>
     </>

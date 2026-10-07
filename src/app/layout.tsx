@@ -4,14 +4,14 @@
  * @hopsyder
  */
 import type { Metadata, Viewport } from "next";
-import { Archivo, Inter } from "next/font/google";
+import { Bricolage_Grotesque, Geist } from "next/font/google";
 import "./globals.css";
 import { SITE } from "@/lib/site";
 
-// Titres : sans-serif architecturale, légèrement condensée (axe wdth)
-const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo", display: "swap" });
-// Texte : très lisible
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+// Titres : grotesque contemporaine à forte personnalité
+const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
+// Texte & interface : très lisible, chiffres nets
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#121314",
+  themeColor: "#14161a",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -44,7 +44,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${archivo.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="fr" className={`${bricolage.variable} ${geist.variable}`} suppressHydrationWarning>
       <head>
         {/* Marque la présence de JS avant le premier rendu (évite le flash du Hero) */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />

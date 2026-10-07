@@ -1,16 +1,18 @@
-/** 404 — renvoie vers le catalogue et la recherche. @hopsyder */
+/** 404 — renvoie vers le catalogue et le contact. @hopsyder */
 import { ButtonLink } from "@/components/ui/Button";
+import { Logo } from "@/components/layout/Logo";
 
 export default function NotFound() {
   return (
-    <section className="container-x flex min-h-[80vh] flex-col items-start justify-center pt-24">
-      <p className="tabular font-display text-[10rem] font-black leading-none text-accent">404</p>
-      <h1 className="h-section mt-2">Cette page n'existe pas.</h1>
-      <p className="mt-4 max-w-md text-steel">Le produit ou la page recherchée a peut-être changé d'adresse.</p>
-      <div className="mt-8 flex gap-3">
-        <ButtonLink href="/produits">Explorer les produits</ButtonLink>
+    <main className="shell flex min-h-dvh flex-col items-start justify-center py-20">
+      <Logo />
+      <p className="tabular mt-12 font-display text-[clamp(6rem,18vw,11rem)] font-bold leading-none tracking-[-0.06em] text-accent">404</p>
+      <h1 className="t-h1 mt-2">Cette page n'existe pas.</h1>
+      <p className="t-lead mt-4 max-w-md">Le produit ou la page recherchée a peut-être changé d'adresse.</p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <ButtonLink href="/produits" variant="dark">Explorer les produits</ButtonLink>
         <ButtonLink href="/contact" variant="outline">Nous contacter</ButtonLink>
       </div>
-    </section>
+    </main>
   );
 }

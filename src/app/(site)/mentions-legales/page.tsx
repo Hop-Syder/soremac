@@ -19,8 +19,8 @@ export default function LegalPage() {
   return (
     <>
       <PageHero title="Mentions légales" crumbs={[{ name: "Mentions légales", href: "/mentions-legales" }]} />
-      <section className="container-x py-16">
-        <dl className="max-w-3xl divide-y divide-line">
+      <section className="shell section">
+        <dl className="max-w-3xl divide-y divide-line rounded-[20px] border border-line bg-white px-6">
           {rows.map(([k, v]) => (
             <div key={k} className="grid gap-1 py-4 sm:grid-cols-[200px_1fr]"><dt className="text-steel">{k}</dt><dd className="tabular font-medium">{v}</dd></div>
           ))}

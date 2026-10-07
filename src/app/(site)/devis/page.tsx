@@ -16,7 +16,7 @@ export default function QuotePage() {
   return (
     <>
       <PageHero eyebrow="Devis" title="Besoin d'un devis ? Parlons-en." intro="Choisissez vos produits. Nous vous accompagnons pour la suite." crumbs={[{ name: "Devis", href: "/devis" }]} />
-      <section className="container-x py-12 md:py-20"><QuotePageClient /></section>
+      <section className="section"><div className="shell"><QuotePageClient /></div></section>
     </>
   );
 }

@@ -12,13 +12,13 @@ export function QuotePageClient() {
   const [free, setFree] = useState("");
 
   return (
-    <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
-      <div>
-        <h2 className="font-display text-3xl font-bold uppercase">Votre sélection</h2>
+    <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
+      <div className="rounded-[24px] border border-line bg-white p-6 shadow-[var(--shadow-card)] md:p-8">
+        <h2 className="t-h3">Votre sélection</h2>
         {items.length ? (
           <QuoteList />
         ) : (
-          <div className="mt-4 border border-dashed border-line bg-white p-8">
+          <div className="mt-4 rounded-[20px] border border-dashed border-ink/20 bg-white p-8">
             <p className="text-steel">Aucun produit pour l'instant. Parcourez le catalogue ou ajoutez librement un besoin ci-dessous.</p>
             <ButtonLink href="/produits" variant="outline" className="mt-5">Explorer les produits</ButtonLink>
           </div>
@@ -35,14 +35,14 @@ export function QuotePageClient() {
         >
           <label className="flex-1">
             <span className="sr-only">Ajouter un besoin libre</span>
-            <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Autre besoin : ex. treillis soudé, gravier…" className="h-12 w-full border border-line bg-white px-3.5 outline-none focus:border-ink" />
+            <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Autre besoin : ex. treillis soudé, gravier…" className="h-12 w-full rounded-[10px] border border-line bg-white px-3.5 outline-none focus:border-ink/50" />
           </label>
           <Button type="submit" variant="dark">Ajouter</Button>
         </form>
       </div>
       <div className="lg:sticky lg:top-28 lg:self-start">
-        <div className="bg-white p-6 md:p-8">
-          <h2 className="mb-5 font-display text-3xl font-bold uppercase">Vos coordonnées</h2>
+        <div className="rounded-[24px] border border-line bg-white p-6 shadow-[var(--shadow-card)] md:p-8">
+          <h2 className="t-h3 mb-5">Vos coordonnées</h2>
           <QuoteForm />
         </div>
       </div>

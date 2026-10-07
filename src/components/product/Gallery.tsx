@@ -1,116 +1,126 @@
 /**
- * Galerie produit (TDR §25) — Motion F : crossfade contrôlé, sans 3D.
- * Desktop : grande image + miniatures, zoom au survol qui suit le curseur, lightbox au clic.
- * Mobile  : carrousel swipe natif (scroll-snap) + indicateurs.
- * Lightbox : plein écran, précédent/suivant, clavier (← → Échap), swipe.
+ * Galerie produit (TDR §25) — Motion F : glissé contrôlé, sans 3D.
+ * Carrousel principal Embla (swipe mobile, glisser desktop) synchronisé avec les miniatures,
+ * zoom au survol qui suit le curseur (desktop), plein écran au clic : ← → Échap, swipe, compteur.
  * @hopsyder
  */
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { AnimatePresence, motion } from "motion/react";
-import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
+import { motion } from "motion/react";
+import { CaretLeftIcon, CaretRightIcon, CornersOutIcon, XIcon } from "@phosphor-icons/react/ssr";
 import type { ProductImage } from "@/lib/catalog/types";
 import { cn } from "@/lib/cn";
-import { EASE } from "@/components/motion/tokens";
+
+const ROLE_LABEL: Record<string, string> = {
+  main: "Vue principale", side: "Vue secondaire", detail: "Détail", packaging: "Packaging",
+  texture: "Texture", dimensions: "Dimensions", usage: "Utilisation", site: "En chantier",
+};
 
 export function Gallery({ images, name }: { images: ProductImage[]; name: string }) {
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
-  const track = useRef<HTMLDivElement>(null);
+  const [mainRef, main] = useEmblaCarousel({ loop: images.length > 1 });
   const n = images.length;
-  const go = useCallback((i: number) => setIndex((i + n) % n), [n]);
 
-  // Mobile : synchronise l'index avec la position du carrousel
-  const onScroll = () => {
-    const el = track.current;
-    if (el) setIndex(Math.round(el.scrollLeft / el.clientWidth));
-  };
+  useEffect(() => {
+    if (!main) return;
+    const onSelect = () => setIndex(main.selectedScrollSnap());
+    main.on("select", onSelect);
+    return () => { main.off("select", onSelect); };
+  }, [main]);
+
+  const go = useCallback((i: number) => main?.scrollTo(i), [main]);
+  const btn = "absolute top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-opacity hover:bg-white";
+
+  if (!n) return <div className="aspect-square rounded-[24px] bg-paper-2" />;
 
   return (
-    <div className="lg:sticky lg:top-24">
-      {/* Mobile — swipe */}
-      <div className="relative -mx-4 sm:-mx-6 lg:hidden">
-        <div ref={track} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
-          {images.map((img, i) => (
-            <button key={img.src + i} onClick={() => { setIndex(i); setOpen(true); }} className="relative aspect-square w-full shrink-0 snap-center bg-paper-2" aria-label={`Agrandir l'image ${i + 1} sur ${n}`}>
-              <Image src={img.src} alt={img.alt} fill priority={i === 0} sizes="100vw" className="object-cover" />
-            </button>
-          ))}
-        </div>
-        {n > 1 && (
-          <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5" aria-hidden>
-            {images.map((_, i) => (
-              <span key={i} className={cn("h-1 rounded-full bg-paper transition-all duration-300", i === index ? "w-6 opacity-100" : "w-1.5 opacity-60")} />
+    <div className="lg:sticky lg:top-28">
+      <div className="group relative overflow-hidden rounded-[24px] border border-line bg-white">
+        <div ref={mainRef} className="overflow-hidden">
+          <div className="flex touch-pan-y">
+            {images.map((img, i) => (
+              <div key={img.src + i} className="relative aspect-square min-w-0 shrink-0 grow-0 basis-full">
+                <button
+                  className="absolute inset-0 cursor-zoom-in overflow-hidden"
+                  onClick={() => setOpen(true)}
+                  onMouseMove={(e) => {
+                    if (i !== index || window.matchMedia("(pointer: coarse)").matches) return;
+                    const r = e.currentTarget.getBoundingClientRect();
+                    setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+                  }}
+                  onMouseLeave={() => setZoom(null)}
+                  aria-label={`Agrandir l'image ${i + 1} sur ${n} : ${img.alt}`}
+                >
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    priority={i === 0}
+                    sizes="(min-width:1024px) 55vw, 100vw"
+                    className="object-cover transition-transform duration-300 ease-out"
+                    style={zoom && i === index ? { transform: "scale(1.7)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
+                  />
+                </button>
+              </div>
             ))}
           </div>
+        </div>
+
+        {n > 1 && (
+          <>
+            <button onClick={() => main?.scrollPrev()} className={cn(btn, "left-4 opacity-0 group-hover:opacity-100 max-lg:hidden")} aria-label="Image précédente"><CaretLeftIcon size={18} weight="bold" /></button>
+            <button onClick={() => main?.scrollNext()} className={cn(btn, "right-4 opacity-0 group-hover:opacity-100 max-lg:hidden")} aria-label="Image suivante"><CaretRightIcon size={18} weight="bold" /></button>
+          </>
         )}
-        <span className="tabular absolute right-3 top-3 bg-ink/70 px-2 py-0.5 text-xs text-paper">{index + 1} / {n}</span>
+        <div className="pointer-events-none absolute inset-x-4 bottom-4 flex items-end justify-between">
+          <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur">
+            {images[index]?.role ? ROLE_LABEL[images[index].role!] : `Vue ${index + 1}`}
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="tabular rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">{index + 1} / {n}</span>
+            <span className="grid size-8 place-items-center rounded-full bg-white/90 shadow-sm max-lg:hidden"><CornersOutIcon size={15} weight="bold" /></span>
+          </span>
+        </div>
       </div>
 
-      {/* Desktop — image principale + miniatures */}
-      <div className="hidden gap-4 lg:grid lg:grid-cols-[84px_1fr]">
-        <ul className="flex flex-col gap-2" aria-label="Miniatures">
+      {n > 1 && (
+        <ul className="no-scrollbar mt-3 flex gap-2 overflow-x-auto" aria-label="Miniatures">
           {images.map((img, i) => (
-            <li key={img.src + i}>
+            <li key={img.src + i} className="shrink-0">
               <button
-                onClick={() => setIndex(i)}
+                onClick={() => go(i)}
                 aria-current={i === index}
                 aria-label={`Voir l'image ${i + 1} : ${img.alt}`}
-                className={cn("relative block aspect-square w-full overflow-hidden bg-paper-2 outline-offset-2 transition", i === index ? "ring-2 ring-ink" : "opacity-60 hover:opacity-100")}
+                className={cn("relative block size-[72px] overflow-hidden rounded-[12px] border-2 bg-paper-2 transition-all sm:size-20", i === index ? "border-ink" : "border-transparent opacity-60 hover:opacity-100")}
               >
-                <Image src={img.src} alt="" fill sizes="84px" className="object-cover" />
+                <Image src={img.src} alt="" fill sizes="80px" className="object-cover" />
               </button>
             </li>
           ))}
         </ul>
-        <button
-          className="group relative aspect-[4/5] max-h-[78vh] w-full cursor-zoom-in overflow-hidden bg-paper-2 xl:aspect-square"
-          onClick={() => setOpen(true)}
-          onMouseMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
-          }}
-          onMouseLeave={() => setZoom(null)}
-          aria-label="Ouvrir la galerie plein écran"
-        >
-          <AnimatePresence initial={false} mode="popLayout">
-            <motion.div key={index} className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }}>
-              <Image
-                src={images[index].src}
-                alt={images[index].alt}
-                fill
-                priority={index === 0}
-                sizes="(min-width:1024px) 55vw, 100vw"
-                className="object-cover transition-transform duration-300 ease-out"
-                style={zoom ? { transform: "scale(1.6)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
-              />
-            </motion.div>
-          </AnimatePresence>
-          <span className="absolute bottom-4 right-4 flex items-center gap-2 bg-paper/90 px-3 py-2 text-xs font-medium opacity-0 transition-opacity group-hover:opacity-100">
-            <Expand size={14} /> Plein écran
-          </span>
-        </button>
-      </div>
+      )}
 
-      <Lightbox images={images} index={index} open={open} onOpenChange={setOpen} go={go} name={name} />
+      <Lightbox images={images} index={index} open={open} onOpenChange={setOpen} onIndex={(i) => go(i)} name={name} />
     </div>
   );
 }
 
-function Lightbox({ images, index, open, onOpenChange, go, name }: { images: ProductImage[]; index: number; open: boolean; onOpenChange: (o: boolean) => void; go: (i: number) => void; name: string }) {
+function Lightbox({ images, index, open, onOpenChange, onIndex, name }: { images: ProductImage[]; index: number; open: boolean; onOpenChange: (o: boolean) => void; onIndex: (i: number) => void; name: string }) {
+  const n = images.length;
+  const [i, setI] = useState(index);
   const [dir, setDir] = useState(1);
-  const nav = useCallback((d: number) => { setDir(d); go(index + d); }, [go, index]);
+  useEffect(() => { if (open) setI(index); }, [open, index]);
+  const nav = useCallback((d: number) => { setDir(d); setI((x) => { const nx = (x + d + n) % n; onIndex(nx); return nx; }); }, [n, onIndex]);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") nav(1);
-      if (e.key === "ArrowLeft") nav(-1);
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "ArrowRight") nav(1); if (e.key === "ArrowLeft") nav(-1); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, nav]);
@@ -118,35 +128,31 @@ function Lightbox({ images, index, open, onOpenChange, go, name }: { images: Pro
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[90] bg-ink/95" />
+        <Dialog.Overlay className="fixed inset-0 z-[90] bg-ink/95 backdrop-blur" />
         <Dialog.Content className="fixed inset-0 z-[91] flex flex-col outline-none">
           <Dialog.Title className="sr-only">Galerie — {name}</Dialog.Title>
-          <Dialog.Description className="sr-only">Utilisez les flèches du clavier pour naviguer.</Dialog.Description>
-          <div className="flex items-center justify-between p-4 text-paper">
-            <span className="tabular text-sm">{index + 1} / {images.length} — {images[index].alt}</span>
-            <Dialog.Close className="grid size-11 place-items-center rounded-full hover:bg-paper/10" aria-label="Fermer"><X /></Dialog.Close>
+          <Dialog.Description className="sr-only">Flèches gauche et droite pour naviguer, Échap pour fermer.</Dialog.Description>
+          <div className="flex items-center justify-between gap-4 p-4 text-white">
+            <span className="tabular truncate text-sm text-white/70">{i + 1} / {n} — {images[i]?.alt}</span>
+            <Dialog.Close className="grid size-11 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20" aria-label="Fermer"><XIcon size={20} /></Dialog.Close>
           </div>
           <div className="relative flex-1 overflow-hidden">
-            <AnimatePresence initial={false} custom={dir} mode="popLayout">
-              <motion.div
-                key={index}
-                custom={dir}
-                className="absolute inset-0"
-                initial={{ opacity: 0, x: dir * 60 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: dir * -60 }}
-                transition={{ duration: 0.35, ease: EASE }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                onDragEnd={(_, info) => { if (info.offset.x < -60) nav(1); else if (info.offset.x > 60) nav(-1); }}
-              >
-                <Image src={images[index].src} alt={images[index].alt} fill sizes="100vw" className="object-contain" draggable={false} />
-              </motion.div>
-            </AnimatePresence>
-            {images.length > 1 && (
+            <motion.div
+              key={i}
+              className="absolute inset-4 md:inset-10"
+              initial={{ opacity: 0, x: dir * 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              drag={n > 1 ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={(_, info) => { if (info.offset.x < -60) nav(1); else if (info.offset.x > 60) nav(-1); }}
+            >
+              <Image src={images[i]?.src ?? ""} alt={images[i]?.alt ?? ""} fill sizes="100vw" className="object-contain" draggable={false} />
+            </motion.div>
+            {n > 1 && (
               <>
-                <button onClick={() => nav(-1)} className="absolute left-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-paper/10 text-paper hover:bg-paper/20" aria-label="Image précédente"><ChevronLeft /></button>
-                <button onClick={() => nav(1)} className="absolute right-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-paper/10 text-paper hover:bg-paper/20" aria-label="Image suivante"><ChevronRight /></button>
+                <button onClick={() => nav(-1)} className="absolute left-4 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20" aria-label="Image précédente"><CaretLeftIcon size={20} weight="bold" /></button>
+                <button onClick={() => nav(1)} className="absolute right-4 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20" aria-label="Image suivante"><CaretRightIcon size={20} weight="bold" /></button>
               </>
             )}
           </div>

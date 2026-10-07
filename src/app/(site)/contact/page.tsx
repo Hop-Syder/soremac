@@ -1,12 +1,13 @@
 /**
- * /contact — extrêmement simple (TDR §38).
+ * /contact — extrêmement simple (TDR §38) : canaux directs à gauche, formulaire à droite,
+ * puis carte, adresse complète et horaires.
  * @hopsyder
  */
 import type { Metadata } from "next";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { ArrowUpRightIcon, EnvelopeSimpleIcon, PhoneIcon } from "@phosphor-icons/react/ssr";
 import { PageHero } from "@/components/sections/PageHero";
+import { Location } from "@/components/home/Location";
 import { Reveal } from "@/components/motion/Reveal";
-import { ButtonLink } from "@/components/ui/Button";
 import { WhatsAppIcon } from "@/components/ui/icons";
 import { ContactForm } from "./ContactForm";
 import { SITE } from "@/lib/site";
@@ -20,49 +21,36 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   const channels = [
-    { icon: Phone, label: "Téléphone", value: SITE.phone, href: SITE.phoneHref },
-    { icon: WhatsAppIcon, label: "WhatsApp", value: SITE.whatsappDisplay, href: whatsappGeneral() },
-    { icon: Mail, label: "Email", value: SITE.email, href: `mailto:${SITE.email}` },
+    { icon: PhoneIcon, label: "Téléphone", value: SITE.phone, href: SITE.phoneHref, hint: "Aux heures d'ouverture" },
+    { icon: WhatsAppIcon, label: "WhatsApp", value: SITE.whatsappDisplay, href: whatsappGeneral(), hint: "Le plus rapide pour un devis" },
+    { icon: EnvelopeSimpleIcon, label: "Email", value: SITE.email, href: `mailto:${SITE.email}`, hint: "Pour vos listes et plans" },
   ];
   return (
     <>
-      <PageHero eyebrow="Contact" title="Parlons de votre projet." crumbs={[{ name: "Contact", href: "/contact" }]} />
-      <section className="py-14 md:py-24">
-        <div className="container-x grid gap-12 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
-          <Reveal>
-            <ul className="grid gap-px bg-line">
-              {channels.map(({ icon: Icon, label, value, href }) => (
-                <li key={label}>
-                  <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="group flex items-center gap-5 bg-paper py-6 transition-colors hover:bg-white sm:px-6">
-                    <Icon size={22} className="text-accent-2" />
-                    <span>
-                      <span className="block text-[11px] uppercase tracking-[0.18em] text-steel">{label}</span>
-                      <span className="tabular text-xl font-semibold group-hover:underline group-hover:underline-offset-4">{value}</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-10">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-steel">Horaires</p>
-              <ul className="mt-3 grid gap-1.5">
-                {SITE.hours.map((h) => <li key={h.days} className="flex justify-between gap-4 border-b border-line pb-1.5"><span>{h.days}</span><span className="tabular text-steel">{h.slots}</span></li>)}
-              </ul>
-            </div>
+      <PageHero eyebrow="Contact" title="Parlons de votre projet." intro="Une question, une liste de matériaux, un devis : choisissez le canal qui vous convient." crumbs={[{ name: "Contact", href: "/contact" }]} />
+      <section className="section">
+        <div className="shell grid gap-6 lg:grid-cols-[1fr_1.4fr] lg:gap-10">
+          <Reveal className="grid content-start gap-3">
+            {channels.map(({ icon: Icon, label, value, href, hint }) => (
+              <a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="group flex items-center gap-5 rounded-[20px] border border-line bg-white p-5 shadow-[var(--shadow-card)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
+                <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent-2"><Icon size={26} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-steel">{label} · {hint}</span>
+                  <span className="tabular block truncate text-lg font-semibold">{value}</span>
+                </span>
+                <ArrowUpRightIcon size={18} className="shrink-0 text-steel-2 transition-colors group-hover:text-ink" />
+              </a>
+            ))}
           </Reveal>
-          <Reveal delay={0.1} className="bg-white p-6 md:p-10">
-            <ContactForm />
+          <Reveal delay={0.1} className="rounded-[24px] border border-line bg-white p-6 shadow-[var(--shadow-card)] md:p-10">
+            <h2 className="t-h3">Envoyer un message</h2>
+            <p className="mt-1 text-steel">Réponse rapide par téléphone ou WhatsApp.</p>
+            <div className="mt-7"><ContactForm /></div>
           </Reveal>
         </div>
       </section>
-      <section className="grid lg:grid-cols-[1fr_2fr]">
-        <div className="bg-ink p-8 text-paper md:p-12">
-          <MapPin className="text-accent" />
-          <p className="mt-4 font-display text-3xl font-bold uppercase">{SITE.address.district} — {SITE.address.quarter}</p>
-          <p className="mt-3 text-paper/70">{SITE.address.landmark}<br />{SITE.address.plot}, {SITE.address.city}, {SITE.address.country}</p>
-          <ButtonLink href={SITE.mapsUrl} className="mt-8">Ouvrir dans Google Maps</ButtonLink>
-        </div>
-        <iframe title="Carte — SOREMAC" src={SITE.mapsEmbed} loading="lazy" className="h-[380px] w-full grayscale-[0.6] lg:h-full" referrerPolicy="no-referrer-when-downgrade" />
+      <section className="pb-[var(--section-y)]">
+        <div className="shell"><Location /></div>
       </section>
     </>
   );

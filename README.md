@@ -4,10 +4,13 @@ Refonte complète du site SOREMAC SARL selon le TDR « Vision 2026 ». — @hops
 
 ## Stack
 - **Next.js 16 (App Router, SSG)** — 44 pages pré-rendues, SEO produit/catégorie/local, JSON-LD (HardwareStore, Product, BreadcrumbList, Article), sitemap & robots.
-- **Tailwind CSS v4** — design system « Industrial Premium » (`src/app/globals.css`).
-- **Motion** — reveal, stagger, hover, drawers, galerie, transitions de page, header.
-- **GSAP + ScrollTrigger** — réservé au Hero et à la séquence Services (sticky).
-- **Radix Dialog** — drawers / lightbox accessibles (focus trap, Échap, aria).
+- **Tailwind CSS v4** — design system « Comptoir industriel premium » (`src/app/globals.css`) : neutres pierre/béton, graphite, orange chantier réservé à l'action ; *Bricolage Grotesque* (titres) + *Geist* (texte) ; une échelle unique d'espacements (`.shell`, `.section`).
+- **Phosphor Icons** (SVG, style duotone) — jeu d'icônes unique, aucun émoji.
+- **Motion** — reveal, stagger, hover, drawers, onglets, galerie plein écran, header.
+- **GSAP + ScrollTrigger** — réservé au Hero (timeline + parallax) et à la séquence Services (panneau collant).
+- **Embla Carousel** — carrousel « produits à la une » et galerie produit (swipe tactile).
+- **Lenis** — défilement fluide desktop (désactivé au tactile et en reduced-motion).
+- **Radix Dialog** — drawers, recherche ⌘K, lightbox accessibles (focus trap, Échap, aria).
 
 ## Démarrer
 ```bash
