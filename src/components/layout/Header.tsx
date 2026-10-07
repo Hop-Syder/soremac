@@ -35,6 +35,8 @@ export function Header() {
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 12));
   useEffect(() => setMenu(false), [pathname]);
 
+  // Au-dessus du Hero holographique (fond sombre) tant qu'on n'a pas défilé : header clair
+  const onDark = pathname === "/" && !scrolled;
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
@@ -72,7 +74,7 @@ export function Header() {
           )}
         >
           <motion.div initial={false} animate={{ height: scrolled ? 64 : 76 }} transition={{ duration: 0.3, ease: EASE }} className="shell flex items-center gap-6">
-            <Logo />
+            <Logo tone={onDark ? "light" : "dark"} />
 
             <nav aria-label="Navigation principale" className="ml-4 hidden lg:block">
               <ul className="flex items-center gap-1">
@@ -81,10 +83,10 @@ export function Header() {
                     <Link
                       href={item.href}
                       aria-current={isActive(item.href) ? "page" : undefined}
-                      className={cn("relative block whitespace-nowrap rounded-lg px-3 py-2 text-[15px] font-medium transition-colors", isActive(item.href) ? "text-ink" : "text-steel hover:text-ink")}
+                      className={cn("relative block whitespace-nowrap rounded-lg px-3 py-2 text-[15px] font-medium transition-colors", onDark ? (isActive(item.href) ? "text-white" : "text-white/65 hover:text-white") : isActive(item.href) ? "text-ink" : "text-steel hover:text-ink")}
                     >
                       {isActive(item.href) && (
-                        <motion.span layoutId="nav-pill" className="absolute inset-0 -z-10 rounded-lg bg-ink/[0.06]" transition={{ duration: 0.35, ease: EASE }} />
+                        <motion.span layoutId="nav-pill" className={cn("absolute inset-0 -z-10 rounded-lg", onDark ? "bg-white/10" : "bg-ink/[0.06]")} transition={{ duration: 0.35, ease: EASE }} />
                       )}
                       {item.label}
                     </Link>
@@ -97,14 +99,14 @@ export function Header() {
               {/* Recherche rapide */}
               <button
                 onClick={search.open}
-                className="hidden h-10 items-center gap-2.5 rounded-[10px] border border-line bg-white pl-3 pr-2 text-sm text-steel transition-colors hover:border-ink/30 md:flex 2xl:w-56"
+                className={cn("hidden h-10 items-center gap-2.5 rounded-[10px] border pl-3 pr-2 text-sm transition-colors md:flex 2xl:w-56", onDark ? "border-white/15 bg-white/5 text-white/75 hover:border-white/40" : "border-line bg-white text-steel hover:border-ink/30")}
                 aria-label="Rechercher un produit"
               >
                 <MagnifyingGlassIcon size={18} />
                 <span className="hidden 2xl:inline">Rechercher…</span>
-                <kbd className="ml-auto hidden rounded-md bg-paper px-1.5 py-0.5 text-[11px] font-medium 2xl:inline">⌘K</kbd>
+                <kbd className={cn("ml-auto hidden rounded-md px-1.5 py-0.5 text-[11px] font-medium 2xl:inline", onDark ? "bg-white/10" : "bg-paper")}>⌘K</kbd>
               </button>
-              <button onClick={search.open} className="grid size-10 place-items-center rounded-[10px] text-ink md:hidden" aria-label="Rechercher">
+              <button onClick={search.open} className={cn("grid size-10 place-items-center rounded-[10px] md:hidden", onDark ? "text-white" : "text-ink")} aria-label="Rechercher">
                 <MagnifyingGlassIcon size={22} />
               </button>
 
@@ -113,7 +115,7 @@ export function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("whatsapp_click", { from: "header" })}
-                className={cn(buttonClass("outline", "sm"), "max-xl:hidden")}
+                className={cn(buttonClass("outline", "sm"), "max-xl:hidden", onDark && "text-white")}
               >
                 <WhatsAppIcon size={17} className="text-whatsapp" /> WhatsApp
               </a>
@@ -121,7 +123,7 @@ export function Header() {
                 Demander un devis
                 {count > 0 && <span className="tabular grid size-5 place-items-center rounded-full bg-ink text-[11px] text-white">{count}</span>}
               </ButtonLink>
-              <button onClick={() => setMenu(true)} className="grid size-10 place-items-center rounded-[10px] text-ink lg:hidden" aria-label="Ouvrir le menu">
+              <button onClick={() => setMenu(true)} className={cn("grid size-10 place-items-center rounded-[10px] lg:hidden", onDark ? "text-white" : "text-ink")} aria-label="Ouvrir le menu">
                 <ListIcon size={24} />
               </button>
             </div>
