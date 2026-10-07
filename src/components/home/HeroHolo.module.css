@@ -38,7 +38,7 @@
   position: absolute; z-index: 1;
   right: 0; top: 0; bottom: 0; width: 62%;
 }
-.poster, .canvas { position: absolute; inset: 0; transition: opacity 0.9s ease; }
+.canvas { position: absolute; inset: 0; transition: opacity 0.9s ease; }
 /* fondu de la scène vers la zone texte (lisibilité) */
 .canvas { mask-image: linear-gradient(90deg, transparent 0%, black 22%); }
 .scene { position: absolute; inset: 4% 0 2% -6%; will-change: transform; transform-origin: 55% 55%; pointer-events: auto; }

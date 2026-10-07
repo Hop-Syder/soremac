@@ -124,27 +124,6 @@ html.lenis, html.lenis body { height: auto; }
 /* Back-office : grilles sans colonnes explicites contenues dans leur parent */
 .admin-ui .grid:not([class*="grid-cols"]) { grid-template-columns: minmax(0, 1fr); }
 
-/* ───────────── Maquette holographique (SVG du Hero) ───────────── */
-.holo-house text { font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif; }
-.holo-house [data-part] { transition: filter .35s ease, opacity .35s ease; }
-.holo-house [data-part="structure"] { animation: holo-pulse 6s ease-in-out infinite; }
-.holo-house .holo-current { animation: holo-current 2.4s linear infinite; }
-.holo-house .holo-particles circle { animation: holo-drift linear infinite alternate; opacity: .5; }
-/* Survol d'un label → le composant correspondant s'illumine */
-.holo-house[data-hover="roof"] [data-part="roof"],
-.holo-house[data-hover="tile"] [data-part="tile"],
-.holo-house[data-hover="rebar"] [data-part="rebar"],
-.holo-house[data-hover="steel"] [data-part="steel"],
-.holo-house[data-hover="concrete"] [data-part="concrete"],
-.holo-house[data-hover="electricity"] [data-part="electricity"],
-.holo-house[data-hover="tools"] [data-part="tools"] { filter: brightness(1.6) drop-shadow(0 0 6px rgb(103 232 249 / .7)); }
-@keyframes holo-pulse { 50% { opacity: .6; } }
-@keyframes holo-current { to { stroke-dashoffset: -40; } }
-@keyframes holo-drift { from { transform: translate(0, 0); } to { transform: translate(6px, -14px); } }
-@media (prefers-reduced-motion: reduce) {
-  .holo-house [data-part="structure"], .holo-house .holo-current, .holo-house .holo-particles circle { animation: none; }
-}
-
 /* Labels holographiques de la scène 3D */
 .holo3d-label {
   display: inline-flex; align-items: center; gap: 8px;

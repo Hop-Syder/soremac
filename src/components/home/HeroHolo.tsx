@@ -12,8 +12,8 @@
  *
  * Desktop : parallaxe souris très légère par plans (texte stable).
  * Mobile : maison plus petite, moins de composants/labels, séquence raccourcie.
- * prefers-reduced-motion ou WebGL indisponible : maquette SVG statique assemblée, ni pin ni timeline.
- * La maquette SVG sert aussi d'image d'attente pendant le chargement de la 3D.
+ * prefers-reduced-motion : scène 3D figée (rendue une seule fois), maison assemblée, ni pin ni timeline.
+ * WebGL indisponible : seul le fond s'affiche, le contenu texte reste complet.
  * @hopsyder
  */
 "use client";
@@ -25,7 +25,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { ArrowClockwiseIcon, ArrowRightIcon, CaretLeftIcon, CaretRightIcon, CubeFocusIcon, HandGrabbingIcon } from "@phosphor-icons/react/ssr";
 import { ButtonLink } from "@/components/ui/Button";
-import { HouseHologram } from "./hero/HouseHologram";
 import { createHeroState, type PartKey } from "./hero3d/state";
 import s from "./HeroHolo.module.css";
 
@@ -51,6 +50,7 @@ export function HeroHolo() {
   const state = useMemo(createHeroState, []);
   const [mobile, setMobile] = useState(false);
   const [use3D, setUse3D] = useState(false);
+  const [still, setStill] = useState(false);
   const [ready, setReady] = useState(false);
   const [auto, setAuto] = useState(false);
   const drag = useRef<{ x: number; active: boolean } | null>(null);
@@ -95,7 +95,8 @@ export function HeroHolo() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const set = () => setMobile(mq.matches);
     set();
-    setUse3D(!reduce && hasWebGL());
+    setStill(reduce);
+    setUse3D(hasWebGL());
     mq.addEventListener("change", set);
     return () => mq.removeEventListener("change", set);
   }, []);
@@ -203,17 +204,14 @@ export function HeroHolo() {
       >
         <div data-hero="stage" className="hero-init absolute inset-0">
           <div className={s.halo} aria-hidden />
-          <div className={s.poster} style={{ opacity: use3D && ready ? 0 : 1 }}>
-            <div className={s.scene}><HouseHologram mobile={mobile} /></div>
-          </div>
           {use3D && (
             <div className={s.canvas} style={{ opacity: ready ? 1 : 0 }}>
-              <Scene state={state} mobile={mobile} onReady={() => setReady(true)} />
+              <Scene state={state} mobile={mobile} still={still} onReady={() => setReady(true)} />
             </div>
           )}
         </div>
 
-        {use3D && ready && (
+        {use3D && ready && !still && (
           <>
             {/* Badge : la maquette est un outil de présentation, pas une image */}
             <div className={s.badge}>
@@ -262,7 +260,7 @@ export function HeroHolo() {
       </div>
 
       {/* Progression de la séquence (desktop) */}
-      {use3D && (
+      {use3D && !still && (
         <>
           <div data-progress className={s.progress} aria-hidden>
             {[0, 1, 2, 3].map((i) => <span key={i}><i /></span>)}
