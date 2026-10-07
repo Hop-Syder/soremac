@@ -18,12 +18,16 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
-import { getFeatured, getProduct, productUrl } from "@/lib/catalog/products";
+import { productUrl } from "@/lib/catalog/products";
+import { featured as featuredOf, findProduct, getCatalog } from "@/lib/catalog/repo";
 import { SITE, yearsOfExperience } from "@/lib/site";
 
-export default function HomePage() {
-  const featured = getFeatured().slice(0, 8);
-  const showcase = ["sikalatex", "toiturol", "betonniere-410-litres"].map(getProduct).filter((p) => !!p);
+export default async function HomePage() {
+  const catalog = await getCatalog();
+  const featured = featuredOf(catalog).slice(0, 8);
+  // Vitrine éditoriale : produits de marque mis en avant, sinon premiers produits « à la une »
+  const picked = ["sikalatex", "toiturol", "betonniere-410-litres"].map((s) => findProduct(catalog, s)).filter((p) => !!p);
+  const showcase = (picked.length === 3 ? picked : featured.slice(0, 3));
 
   return (
     <>
@@ -40,7 +44,7 @@ export default function HomePage() {
             intro="Du gros œuvre aux finitions, trouvez rapidement les matériaux et équipements adaptés à votre projet."
             action={<ButtonLink href="/produits" variant="outline">Tout le catalogue <ArrowRight size={16} /></ButtonLink>}
           />
-          <CategoryGrid />
+          <CategoryGrid categories={catalog.categories} />
         </div>
       </section>
 

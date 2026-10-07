@@ -15,26 +15,28 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
 import { WhatsAppIcon } from "@/components/ui/icons";
-import { getCategory } from "@/lib/catalog/categories";
-import { getProduct, getRelated, productUrl, published } from "@/lib/catalog/products";
+import { productUrl } from "@/lib/catalog/products";
+import { findCategory, findProduct, getCatalog, relatedTo } from "@/lib/catalog/repo";
 import { JsonLd, productLd } from "@/lib/seo";
 import { whatsappProduct } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ categorie: string; produit: string }> };
 
-export const generateStaticParams = () => published.map((p) => ({ categorie: p.category, produit: p.slug }));
-export const dynamicParams = false;
+// Pré-rendu des fiches connues ; les nouvelles fiches publiées depuis l'admin sont rendues à la demande.
+export const generateStaticParams = async () => (await getCatalog()).products.map((p) => ({ categorie: p.category, produit: p.slug }));
 
 async function load(params: Props["params"]) {
   const { categorie, produit } = await params;
-  const product = getProduct(produit);
-  return product && product.category === categorie ? product : null;
+  const catalog = await getCatalog();
+  const product = findProduct(catalog, produit);
+  return product && product.category === categorie ? { product, catalog } : null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const p = await load(params);
-  if (!p) return {};
-  const cat = getCategory(p.category);
+  const loaded = await load(params);
+  if (!loaded) return {};
+  const { product: p, catalog } = loaded;
+  const cat = findCategory(catalog, p.category);
   return {
     title: p.seoTitle ? { absolute: `${p.seoTitle} | SOREMAC` } : `${p.name} — ${cat?.name} à Cotonou`,
     description: p.seoDescription ?? `${p.summary} Disponible chez SOREMAC à Cotonou. Prix sur demande, devis rapide sur WhatsApp.`,
@@ -44,10 +46,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage({ params }: Props) {
-  const p = await load(params);
-  if (!p) notFound();
-  const cat = getCategory(p.category)!;
-  const related = getRelated(p);
+  const loaded = await load(params);
+  if (!loaded) notFound();
+  const { product: p, catalog } = loaded;
+  const cat = findCategory(catalog, p.category)!;
+  const related = relatedTo(catalog, p);
 
   const specs: [string, string][] = [
     ...Object.entries(p.specs),

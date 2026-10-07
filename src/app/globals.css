@@ -82,3 +82,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .js .hero-init { visibility: hidden; }
 }
+
+/* Back-office : une grille sans colonnes explicites ne doit jamais s'élargir
+   au-delà de son conteneur à cause du contenu (champs, listes) — mobile notamment. */
+.admin-ui .grid:not([class*="grid-cols"]) { grid-template-columns: minmax(0, 1fr); }

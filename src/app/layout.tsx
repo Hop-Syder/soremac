@@ -1,17 +1,12 @@
 /**
- * Layout racine — polices, SEO global, données structurées LocalBusiness, shell applicatif.
+ * Layout racine — polices et SEO global. Le shell public vit dans (site)/layout.tsx,
+ * le back-office dans admin/layout.tsx.
  * @hopsyder
  */
 import type { Metadata, Viewport } from "next";
 import { Archivo, Inter } from "next/font/google";
 import "./globals.css";
 import { SITE } from "@/lib/site";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { MobileDock } from "@/components/layout/MobileDock";
-import { QuoteProvider } from "@/components/quote/QuoteProvider";
-import { QuoteDrawer } from "@/components/quote/QuoteDrawer";
-import { JsonLd, localBusinessLd } from "@/lib/seo";
 
 // Titres : sans-serif architecturale, légèrement condensée (axe wdth)
 const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo", display: "swap" });
@@ -55,14 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
       </head>
       <body>
-        <JsonLd data={localBusinessLd()} />
-        <QuoteProvider>
-          <Header />
-          <main id="contenu" className="min-h-dvh">{children}</main>
-          <Footer />
-          <QuoteDrawer />
-          <MobileDock />
-        </QuoteProvider>
+        {children}
       </body>
     </html>
   );

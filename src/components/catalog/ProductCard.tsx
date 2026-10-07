@@ -7,13 +7,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { Product } from "@/lib/catalog/types";
-import { getCategory } from "@/lib/catalog/categories";
 import { productUrl } from "@/lib/catalog/products";
 import { AddToQuoteQuick } from "@/components/product/AddToQuote";
 import { cn } from "@/lib/cn";
 
 export function ProductCard({ product, query = "", priority, className }: { product: Product; query?: string; priority?: boolean; className?: string }) {
-  const cat = getCategory(product.category);
   const href = productUrl(product) + query;
   const axis = product.variants.find((v) => v.options.length > 1) ?? product.variants[0];
 
@@ -37,7 +35,7 @@ export function ProductCard({ product, query = "", priority, className }: { prod
       </Link>
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-steel">
-          {cat?.shortName}{product.brand ? ` · ${product.brand}` : ""}
+          {product.categoryName}{product.brand ? ` · ${product.brand}` : ""}
         </p>
         <h3 className="mt-1.5 font-display text-[22px] font-bold uppercase leading-none">
           <Link href={href} className="after:absolute after:inset-0 after:content-['']">{product.name}</Link>

@@ -8,8 +8,7 @@ import { Suspense } from "react";
 import { PageHero } from "@/components/sections/PageHero";
 import { CatalogExplorer } from "@/components/catalog/CatalogExplorer";
 import { CtaBand } from "@/components/sections/CtaBand";
-import { categories } from "@/lib/catalog/categories";
-import { published } from "@/lib/catalog/products";
+import { getCatalog } from "@/lib/catalog/repo";
 
 export const metadata: Metadata = {
   title: "Catalogue — matériaux de construction",
@@ -17,7 +16,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/produits" },
 };
 
-export default function CatalogPage() {
+export default async function CatalogPage() {
+  const { categories, products: published } = await getCatalog();
   return (
     <>
       <PageHero
@@ -36,7 +36,7 @@ export default function CatalogPage() {
       </PageHero>
       <section className="container-x py-8 md:py-14">
         <Suspense>
-          <CatalogExplorer products={published} />
+          <CatalogExplorer products={published} categories={categories} />
         </Suspense>
       </section>
       <CtaBand title="Vous ne trouvez pas votre référence ?" text="Notre catalogue en ligne s'enrichit progressivement. Envoyez-nous votre liste : nous vérifions la disponibilité pour vous." />

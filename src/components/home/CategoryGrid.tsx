@@ -9,7 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import { categories } from "@/lib/catalog/categories";
+import type { Category } from "@/lib/catalog/types";
 import { cn } from "@/lib/cn";
 import { EASE, STAGGER } from "@/components/motion/tokens";
 
@@ -20,7 +20,7 @@ const span: Record<string, string> = {
   sm: "col-span-1 lg:col-span-3",
 };
 
-export function CategoryGrid() {
+export function CategoryGrid({ categories }: { categories: Category[] }) {
   const reduce = useReducedMotion();
   return (
     <ul className="grid grid-flow-row-dense auto-rows-[180px] grid-cols-2 gap-2 md:auto-rows-[220px] lg:grid-cols-12 lg:gap-3">

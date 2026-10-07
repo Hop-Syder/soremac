@@ -10,7 +10,7 @@ import { CtaBand } from "@/components/sections/CtaBand";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Reveal } from "@/components/motion/Reveal";
 import { articles, getArticle } from "@/lib/catalog/articles";
-import { published } from "@/lib/catalog/products";
+import { getCatalog } from "@/lib/catalog/repo";
 import { JsonLd, articleLd } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticlePage({ params }: Props) {
   const a = getArticle((await params).slug);
   if (!a) notFound();
-  const linked = published.filter((p) => a.productCategories.includes(p.category)).slice(0, 3);
+  const linked = (await getCatalog()).products.filter((p) => a.productCategories.includes(p.category)).slice(0, 3);
   return (
     <>
       <JsonLd data={articleLd(a)} />

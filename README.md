@@ -27,9 +27,38 @@ src/components/motion/      langage de motion unique (tokens + Reveal/Stagger)
 src/components/quote/       Devis Builder (provider persistant, drawer, formulaire)
 src/components/product/     galerie + lightbox, configurateur de variantes
 src/components/catalog/     ProductCard, CatalogExplorer (recherche + filtres)
+src/lib/catalog/repo.ts     lecture catalogue (Supabase, repli sur le seed)
+src/lib/admin/              auth, validation, lecture back-office
+src/app/(site)/             site public
+src/app/admin/              back-office (login, panel, actions serveur)
 src/app/api/devis           réception devis/contact → Supabase
 docs/                       choix des skills, schéma SQL
 ```
+
+## Back-office `/admin`
+Gestion du catalogue et des demandes, sans toucher au code (TDR §44).
+
+| Écran | Fonctions |
+|---|---|
+| Tableau de bord | Demandes nouvelles / en cours, produits publiés / brouillons, fiches pauvres en images, import du catalogue initial |
+| Produits | Recherche et filtres, publier / dépublier / archiver, « À la une » et « Populaire » en un clic |
+| Fiche produit | Infos, galerie multi-vues (upload, texte alt, rôle, ordre), variantes, caractéristiques, contenu, PDF, produits associés, SEO avec aperçu Google |
+| Catégories | Créer, modifier, réorganiser (ordre du site), taille de tuile homepage, catégories associées |
+| Demandes | Statuts Nouveau → En traitement → Traité → Archivé, réponse WhatsApp / appel / email en un clic |
+
+### Mise en service
+1. Créer un projet Supabase, exécuter `docs/supabase-schema.sql` dans le SQL Editor (tables, RLS, bucket `catalogue`).
+2. Définir les variables (`.env.example`) : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`, `ADMIN_SECRET` (≥ 32 caractères, `openssl rand -base64 48`).
+3. Se connecter sur `/admin` → **Importer le catalogue initial**.
+
+Chaque modification invalide le cache : le site public est à jour immédiatement ; les nouvelles fiches et catégories sont rendues à la demande.
+Sans Supabase, le site public utilise le catalogue embarqué et l'admin passe en **lecture seule**.
+
+### Sécurité
+- Session : cookie httpOnly signé HMAC-SHA256, 12 h, limité à `/admin` ; comparaison du mot de passe en temps constant, délai après échec.
+- Chaque page **et chaque action serveur** vérifie la session ; toutes les saisies sont revalidées côté serveur.
+- La clé `service_role` ne quitte jamais le serveur ; RLS n'autorise que la lecture publique du catalogue publié.
+- Uploads : JPEG/PNG/WebP/AVIF/PDF, 8 Mo max. Back-office non indexé (`noindex`).
 
 ## À fournir par SOREMAC avant production
 - Logo officiel (SVG) et **photographies produits** (les visuels Unsplash sont provisoires).

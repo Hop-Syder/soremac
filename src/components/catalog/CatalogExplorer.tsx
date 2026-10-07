@@ -11,8 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import type { Product } from "@/lib/catalog/types";
-import { categories } from "@/lib/catalog/categories";
+import type { Category, Product } from "@/lib/catalog/types";
 import { searchProducts, preselectQuery } from "@/lib/catalog/search";
 import { ProductCard } from "./ProductCard";
 import { Drawer } from "@/components/ui/Drawer";
@@ -27,7 +26,7 @@ const EXAMPLES = ["Fer 12", "Sikalatex 20 litres", "Tôle couleur", "Lavabo", "B
 
 interface Facet { key: "categorie" | "marque" | "type"; label: string; options: { value: string; label: string; count: number }[] }
 
-export function CatalogExplorer({ products, lockedCategory }: { products: Product[]; lockedCategory?: string }) {
+export function CatalogExplorer({ products, categories, lockedCategory }: { products: Product[]; categories: Category[]; lockedCategory?: string }) {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -91,7 +90,7 @@ export function CatalogExplorer({ products, lockedCategory }: { products: Produc
     list.push({ key: "type", label: "Type", options: [...types].map(([v, n]) => ({ value: v, label: v, count: n })).sort((a, b) => a.label.localeCompare(b.label)) });
     list.push({ key: "marque", label: "Marque", options: [...brands].map(([v, n]) => ({ value: v, label: v, count: n })) });
     return list.filter((f) => f.options.length > 0);
-  }, [hits, lockedCategory]);
+  }, [hits, lockedCategory, categories]);
 
   const toggle = (k: Facet["key"], v: string) =>
     setFilters((f) => ({ ...f, [k]: f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v] }));

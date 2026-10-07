@@ -1,11 +1,12 @@
 /** Sitemap XML : pages, catégories, produits, articles. @hopsyder */
 import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/site";
-import { categories } from "@/lib/catalog/categories";
-import { published, productUrl } from "@/lib/catalog/products";
+import { productUrl } from "@/lib/catalog/products";
+import { getCatalog } from "@/lib/catalog/repo";
 import { articles } from "@/lib/catalog/articles";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { categories, products: published } = await getCatalog();
   const now = new Date();
   const page = (path: string, priority: number) => ({ url: `${SITE.url}${path}`, lastModified: now, priority });
   return [

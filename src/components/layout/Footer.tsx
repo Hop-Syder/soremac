@@ -4,7 +4,7 @@
  */
 import Link from "next/link";
 import { SITE } from "@/lib/site";
-import { categories } from "@/lib/catalog/categories";
+import { getCatalog } from "@/lib/catalog/repo";
 import { Logo } from "./Logo";
 import { Reveal } from "@/components/motion/Reveal";
 
@@ -17,7 +17,8 @@ const company = [
   { href: SITE.clientSpace, label: "Espace client" },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const { categories } = await getCatalog();
   return (
     <footer className="bg-ink pb-24 pt-16 text-paper/70 md:pb-10 md:pt-20">
       <Reveal className="container-x">
