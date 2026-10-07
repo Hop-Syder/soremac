@@ -1,0 +1,84 @@
+/**
+ * Design system SOREMAC — « Industrial Premium » (TDR §4–5)
+ * Graphite · blanc cassé · gris minéral · acier · accent ambre (CTA uniquement).
+ * @hopsyder
+ */
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #121314;          /* graphite très sombre */
+  --color-ink-2: #1d1f21;
+  --color-ink-3: #2a2d30;
+  --color-paper: #f5f3ef;        /* blanc cassé */
+  --color-paper-2: #ebe7e0;      /* gris minéral */
+  --color-line: #d9d4cb;
+  --color-steel: #63676c;        /* gris acier (texte secondaire, AA sur paper) */
+  --color-steel-2: #9aa0a6;
+  --color-accent: #e8862a;       /* ambre chantier — CTA, badges, états */
+  --color-accent-2: #cf6f14;
+  --color-whatsapp: #1f9d55;
+
+  --font-display: var(--font-archivo), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius-card: 4px;
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-stretch: 85%;
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+  ::selection { background: var(--color-accent); color: var(--color-ink); }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10; }
+  /* Sur-titre technique, style catalogue industriel */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-steel;
+  }
+  .eyebrow::before { content: ""; @apply block h-px w-6 bg-accent; }
+  .h-display { @apply text-[clamp(2.6rem,6.6vw,6.5rem)] font-bold uppercase; }
+  .h-section { @apply text-[clamp(2rem,4.6vw,3.75rem)] font-bold uppercase; }
+  .tabular { font-variant-numeric: tabular-nums; }
+  /* Grain discret pour les photos éditoriales */
+  .img-shade { @apply absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/20 to-transparent; }
+}
+
+/* Accessibilité : animations neutralisées (TDR §43) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Hero : masqué uniquement quand JS est actif et que l'animation est prévue — sinon visible */
+@media (prefers-reduced-motion: no-preference) {
+  .js .hero-init { visibility: hidden; }
+}
