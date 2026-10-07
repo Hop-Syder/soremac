@@ -5,6 +5,8 @@
 
 export interface Category {
   slug: string;
+  /** Ordre d'affichage (réorganisable dans le back-office) */
+  position?: number;
   name: string;
   shortName: string;
   description: string;
@@ -65,8 +67,12 @@ export interface Product {
   keywords?: string[];
   seoTitle?: string;
   seoDescription?: string;
-  status: "published" | "draft";
+  status: ProductStatus;
+  /** Renseigné par le dépôt de données (nom lisible de la catégorie) */
+  categoryName?: string;
 }
+
+export type ProductStatus = "published" | "draft" | "archived";
 
 export interface Article {
   slug: string;

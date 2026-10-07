@@ -1,12 +1,13 @@
 /**
- * Footer dense et élégant (TDR §20) — NAP + mentions légales officielles.
+ * Footer (TDR §20) — dense mais aéré : marque, entreprise, produits, contact, mentions légales.
  * @hopsyder
  */
 import Link from "next/link";
+import { ClockIcon, EnvelopeSimpleIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/react/ssr";
 import { SITE } from "@/lib/site";
-import { categories } from "@/lib/catalog/categories";
+import { getCatalog } from "@/lib/catalog/repo";
 import { Logo } from "./Logo";
-import { Reveal } from "@/components/motion/Reveal";
+import { WhatsAppIcon } from "@/components/ui/icons";
 
 const company = [
   { href: "/", label: "Accueil" },
@@ -14,61 +15,57 @@ const company = [
   { href: "/services", label: "Services" },
   { href: "/conseils", label: "Conseils" },
   { href: "/contact", label: "Contact" },
-  { href: SITE.clientSpace, label: "Espace client" },
+  { href: "/devis", label: "Demander un devis" },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const { categories } = await getCatalog();
   return (
-    <footer className="bg-ink pb-24 pt-16 text-paper/70 md:pb-10 md:pt-20">
-      <Reveal className="container-x">
-        <div className="grid gap-12 border-b border-paper/10 pb-12 md:grid-cols-12">
-          <div className="md:col-span-4">
+    <footer className="bg-ink pb-28 pt-20 text-white/65 md:pb-10">
+      <div className="shell">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12">
+          <div className="lg:col-span-4">
             <Logo tone="light" />
-            <p className="mt-5 max-w-xs text-[15px] leading-relaxed">
-              Matériaux de construction, équipements et solutions pour vos projets au Bénin.
-            </p>
-            <p className="mt-6 text-xs uppercase tracking-[0.18em] text-paper/40">Depuis {SITE.foundedYear} · Cotonou</p>
+            <p className="mt-6 max-w-sm text-[15px] leading-relaxed">Matériaux de construction, équipements et solutions pour vos projets au Bénin.</p>
+            <div className="mt-6 flex gap-2">
+              <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-whatsapp px-4 text-sm font-semibold text-white"><WhatsAppIcon size={16} /> WhatsApp</a>
+              <a href={SITE.clientSpace} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center rounded-[10px] border border-white/15 px-4 text-sm font-medium text-white hover:bg-white/5">Espace client</a>
+            </div>
           </div>
-          <FooterCol title="Entreprise" className="md:col-span-2">
-            {company.map((l) => (
-              <li key={l.href}><Link href={l.href} className="hover:text-accent">{l.label}</Link></li>
-            ))}
-          </FooterCol>
-          <FooterCol title="Produits" className="md:col-span-3" listClass="grid-cols-2 gap-x-6 md:grid-cols-1">
-            {categories.slice(0, 10).map((c) => (
-              <li key={c.slug}><Link href={`/produits/${c.slug}`} className="hover:text-accent">{c.name}</Link></li>
-            ))}
-          </FooterCol>
-          <FooterCol title="Contact" className="md:col-span-3">
-            <li><a href={SITE.phoneHref} className="hover:text-accent">Tél. {SITE.phone}</a></li>
-            <li><a href={`https://wa.me/${SITE.whatsapp}`} className="hover:text-accent">WhatsApp {SITE.whatsappDisplay}</a></li>
-            <li><a href={`mailto:${SITE.email}`} className="hover:text-accent">{SITE.email}</a></li>
-            <li className="pt-2 leading-relaxed">
-              {SITE.address.district} — Quartier {SITE.address.quarter}<br />
-              {SITE.address.landmark}<br />
-              {SITE.address.plot}, {SITE.address.city}, {SITE.address.country}
-            </li>
-          </FooterCol>
+
+          <Col title="Entreprise" className="lg:col-span-2">
+            {company.map((l) => <li key={l.href}><Link href={l.href} className="transition-colors hover:text-white">{l.label}</Link></li>)}
+          </Col>
+
+          <Col title="Produits" className="lg:col-span-3" listClass="grid-cols-2 gap-x-6">
+            {categories.slice(0, 10).map((c) => <li key={c.slug}><Link href={`/produits/${c.slug}`} className="transition-colors hover:text-white">{c.shortName}</Link></li>)}
+          </Col>
+
+          <Col title="Contact" className="lg:col-span-3">
+            <li className="flex gap-3"><PhoneIcon size={18} className="mt-0.5 shrink-0 text-accent" /><a href={SITE.phoneHref} className="hover:text-white">{SITE.phone}</a></li>
+            <li className="flex gap-3"><EnvelopeSimpleIcon size={18} className="mt-0.5 shrink-0 text-accent" /><a href={`mailto:${SITE.email}`} className="hover:text-white">{SITE.email}</a></li>
+            <li className="flex gap-3"><MapPinIcon size={18} className="mt-0.5 shrink-0 text-accent" /><span>{SITE.address.district} — {SITE.address.quarter}<br />{SITE.address.plot}, {SITE.address.city}</span></li>
+            <li className="flex gap-3"><ClockIcon size={18} className="mt-0.5 shrink-0 text-accent" /><span>Lun–Ven 08h–13h · 15h–18h<br />Sam 08h–13h</span></li>
+          </Col>
         </div>
-        <div className="flex flex-col gap-3 pt-6 text-xs text-paper/45 md:flex-row md:items-center md:justify-between">
-          <p>
-            © {new Date().getFullYear()} {SITE.name} · RCCM {SITE.legal.rccm} · IFU {SITE.legal.ifu} · Capital {SITE.legal.capital}
-          </p>
-          <div className="flex gap-5">
-            <Link href="/mentions-legales" className="hover:text-paper">Mentions légales</Link>
-            <Link href="/confidentialite" className="hover:text-paper">Confidentialité</Link>
+
+        <div className="mt-16 flex flex-col gap-4 border-t border-white/10 pt-8 text-[13px] text-white/45 lg:flex-row lg:items-center lg:justify-between">
+          <p>© {new Date().getFullYear()} {SITE.name} · RCCM {SITE.legal.rccm} · IFU {SITE.legal.ifu} · Capital {SITE.legal.capital}</p>
+          <div className="flex gap-6">
+            <Link href="/mentions-legales" className="hover:text-white">Mentions légales</Link>
+            <Link href="/confidentialite" className="hover:text-white">Politique de confidentialité</Link>
           </div>
         </div>
-      </Reveal>
+      </div>
     </footer>
   );
 }
 
-function FooterCol({ title, children, className, listClass = "" }: { title: string; children: React.ReactNode; className?: string; listClass?: string }) {
+function Col({ title, children, className, listClass = "" }: { title: string; children: React.ReactNode; className?: string; listClass?: string }) {
   return (
     <div className={className}>
-      <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-paper">{title}</p>
-      <ul className={`grid gap-2.5 text-[14.5px] ${listClass}`}>{children}</ul>
+      <p className="mb-5 text-sm font-semibold text-white">{title}</p>
+      <ul className={`grid gap-3 text-[15px] ${listClass}`}>{children}</ul>
     </div>
   );
 }

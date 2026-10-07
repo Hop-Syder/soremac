@@ -1,67 +1,105 @@
 /**
- * Design system SOREMAC — « Industrial Premium » (TDR §4–5)
- * Graphite · blanc cassé · gris minéral · acier · accent ambre (CTA uniquement).
+ * SOREMAC — Design system « Comptoir industriel premium » (v3)
+ * Clair & minéral, graphite pour le contraste, orange chantier réservé à l'action.
+ * Une seule échelle d'espacements : sections (--section-y), conteneur (.shell), cartes (.card).
  * @hopsyder
  */
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #121314;          /* graphite très sombre */
-  --color-ink-2: #1d1f21;
-  --color-ink-3: #2a2d30;
-  --color-paper: #f5f3ef;        /* blanc cassé */
-  --color-paper-2: #ebe7e0;      /* gris minéral */
-  --color-line: #d9d4cb;
-  --color-steel: #63676c;        /* gris acier (texte secondaire, AA sur paper) */
-  --color-steel-2: #9aa0a6;
-  --color-accent: #e8862a;       /* ambre chantier — CTA, badges, états */
-  --color-accent-2: #cf6f14;
-  --color-whatsapp: #1f9d55;
+  /* Neutres chauds (pierre, béton) */
+  --color-paper: #f6f4f0;        /* fond de page */
+  --color-paper-2: #ece8e1;      /* surfaces secondaires */
+  --color-line: #e2ddd4;         /* bordures */
+  --color-white: #ffffff;
+  /* Graphite */
+  --color-ink: #14161a;          /* texte principal, surfaces sombres */
+  --color-ink-2: #1e2127;
+  --color-ink-3: #2c3038;
+  --color-steel: #5d636d;        /* texte secondaire — AA sur paper et white */
+  --color-steel-2: #9399a3;      /* texte tertiaire, placeholders */
+  /* Marque */
+  --color-accent: #f2701d;       /* orange chantier — CTA, focus, états actifs */
+  --color-accent-2: #d95e0f;     /* hover */
+  --color-accent-soft: #fdeee3;  /* fonds de badges */
+  --color-whatsapp: #1fa855;
 
-  --font-display: var(--font-archivo), "Arial Narrow", sans-serif;
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 14px;
+  --shadow-card: 0 1px 2px rgb(20 22 26 / 0.04), 0 8px 24px -12px rgb(20 22 26 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(20 22 26 / 0.04), 0 24px 48px -20px rgb(20 22 26 / 0.28);
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --radius-card: 4px;
+}
+
+:root {
+  /* Rythme vertical unique de toutes les sections */
+  --section-y: clamp(4.5rem, 9vw, 8rem);
+  --header-h: 72px;
 }
 
 @layer base {
-  html { -webkit-tap-highlight-color: transparent; }
+  html { -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--header-h) + 16px); }
   body {
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-stretch: 85%;
-    letter-spacing: -0.02em;
-    line-height: 0.98;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
     text-wrap: balance;
   }
   p { text-wrap: pretty; }
-  ::selection { background: var(--color-accent); color: var(--color-ink); }
-  :focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 3px;
-    border-radius: 2px;
-  }
+  ::selection { background: var(--color-accent); color: #fff; }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 6px; }
+  img { user-select: none; }
 }
 
 @layer components {
-  .container-x { @apply mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10; }
-  /* Sur-titre technique, style catalogue industriel */
+  /* Conteneur unique : 1280px utiles, gouttières 20 → 40px */
+  .shell { @apply mx-auto w-full max-w-[1360px] px-5 sm:px-8 lg:px-10; }
+  /* Alias historique (back-office) */
+  .container-x { @apply mx-auto w-full max-w-[1360px] px-5 sm:px-8 lg:px-10; }
+  .section { padding-block: var(--section-y); }
+
+  /* Hiérarchie typographique */
+  .t-display { @apply font-display text-[clamp(2.5rem,4.9vw,4.6rem)] font-bold leading-[0.98] tracking-[-0.045em]; }
+  .t-h1 { @apply font-display text-[clamp(2.25rem,4.6vw,4rem)] font-bold leading-[1.02]; }
+  .t-h2 { @apply font-display text-[clamp(1.9rem,3.6vw,3rem)] font-bold leading-[1.05]; }
+  .t-h3 { @apply font-display text-[clamp(1.25rem,1.8vw,1.6rem)] font-semibold leading-tight tracking-[-0.02em]; }
+  .t-lead { @apply text-[1.075rem] leading-relaxed text-steel md:text-[1.2rem]; }
+
+  /* Sur-titre : pastille discrète */
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-steel;
+    @apply inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-[12px] font-medium tracking-wide text-steel;
   }
-  .eyebrow::before { content: ""; @apply block h-px w-6 bg-accent; }
-  .h-display { @apply text-[clamp(2.6rem,6.6vw,6.5rem)] font-bold uppercase; }
-  .h-section { @apply text-[clamp(2rem,4.6vw,3.75rem)] font-bold uppercase; }
+  .eyebrow::before { content: ""; @apply size-1.5 rounded-full bg-accent; }
+  .eyebrow-dark { @apply border-white/15 bg-white/5 text-white/70; }
+
+  /* Carte standard du site */
+  .card { @apply rounded-[var(--radius-card)] border border-line bg-white shadow-[var(--shadow-card)]; }
+
   .tabular { font-variant-numeric: tabular-nums; }
-  /* Grain discret pour les photos éditoriales */
-  .img-shade { @apply absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/20 to-transparent; }
+  .img-shade { @apply absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent; }
+}
+
+/* Lenis — défilement fluide */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* Hero : masqué uniquement si JS actif et animation prévue */
+@media (prefers-reduced-motion: no-preference) {
+  .js .hero-init { visibility: hidden; }
 }
 
 /* Accessibilité : animations neutralisées (TDR §43) */
@@ -74,11 +112,14 @@
   }
 }
 
+/* Défilement horizontal infini (bandeau marques) */
+@keyframes marquee { to { transform: translateX(-50%); } }
+.animate-marquee { animation: marquee 40s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
 .pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Hero : masqué uniquement quand JS est actif et que l'animation est prévue — sinon visible */
-@media (prefers-reduced-motion: no-preference) {
-  .js .hero-init { visibility: hidden; }
-}
+/* Back-office : grilles sans colonnes explicites contenues dans leur parent */
+.admin-ui .grid:not([class*="grid-cols"]) { grid-template-columns: minmax(0, 1fr); }

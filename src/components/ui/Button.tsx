@@ -1,6 +1,7 @@
 /**
- * Bouton du design system — un nombre limité de variantes pour garder une hiérarchie claire (TDR §55).
- * Rendu en <Link>, <a> externe ou <button> selon les props.
+ * Bouton du design system — 5 variantes, 3 tailles, hiérarchie claire (TDR §55).
+ * primary = orange chantier (action principale), dark = graphite, outline, ghost, whatsapp.
+ * Rendu en <Link>, <a> externe ou <button>.
  * @hopsyder
  */
 import Link from "next/link";
@@ -11,17 +12,17 @@ type Variant = "primary" | "dark" | "outline" | "ghost" | "whatsapp" | "light";
 type Size = "sm" | "md" | "lg";
 
 const styles: Record<Variant, string> = {
-  primary: "bg-accent text-ink hover:bg-accent-2",
-  dark: "bg-ink text-paper hover:bg-ink-3",
-  outline: "border border-current/25 text-current hover:border-current hover:bg-current/5",
-  ghost: "text-current underline-offset-4 hover:underline px-0!",
+  primary: "bg-accent text-ink hover:bg-accent-2 hover:text-white shadow-[0_1px_0_rgb(255_255_255/0.25)_inset]",
+  dark: "bg-ink text-white hover:bg-ink-3",
+  outline: "border border-current/20 text-current hover:border-current/60 hover:bg-current/[0.04]",
+  ghost: "text-current hover:bg-current/[0.06]",
   whatsapp: "bg-whatsapp text-white hover:brightness-110",
-  light: "bg-paper text-ink hover:bg-white",
+  light: "bg-white text-ink hover:bg-paper",
 };
 const sizes: Record<Size, string> = {
-  sm: "h-10 px-4 text-[13px]",
-  md: "h-12 px-6 text-sm",
-  lg: "h-14 px-8 text-[15px]",
+  sm: "h-10 gap-2 px-4 text-[14px]",
+  md: "h-12 gap-2.5 px-5 text-[15px]",
+  lg: "h-14 gap-3 px-7 text-[16px]",
 };
 
 interface Base {
@@ -33,9 +34,9 @@ interface Base {
 
 export const buttonClass = (variant: Variant = "primary", size: Size = "md", className?: string) =>
   cn(
-    "group/btn relative inline-flex select-none items-center justify-center gap-2.5 rounded-[3px] font-semibold tracking-tight",
-    "transition-[background-color,border-color,transform,filter] duration-200 ease-out active:scale-[0.98]",
-    "disabled:pointer-events-none disabled:opacity-50",
+    "group/btn relative inline-flex select-none items-center justify-center rounded-[10px] font-semibold tracking-[-0.01em] whitespace-nowrap",
+    "transition-[background-color,color,border-color,transform,filter] duration-200 ease-out active:scale-[0.98]",
+    "disabled:pointer-events-none disabled:opacity-45",
     styles[variant],
     sizes[size],
     className,

@@ -6,7 +6,6 @@
  * @hopsyder
  */
 import type { Product } from "./types";
-import { getCategory } from "./categories";
 
 export const normalize = (s: string) =>
   s
@@ -39,9 +38,8 @@ export function searchProducts(list: Product[], query: string): SearchHit[] {
 
   const hits: SearchHit[] = [];
   for (const product of list) {
-    const cat = getCategory(product.category);
     const haystack = normalize(
-      [product.name, product.brand, product.subcategory, cat?.name, product.summary, ...(product.keywords ?? []), ...Object.values(product.specs)]
+      [product.name, product.brand, product.subcategory, product.categoryName, product.summary, ...(product.keywords ?? []), ...Object.values(product.specs)]
         .filter(Boolean)
         .join(" "),
     );

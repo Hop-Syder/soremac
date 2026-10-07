@@ -1,5 +1,6 @@
 /**
- * Produits prioritaires du MVP (TDR §48).
+ * Produits prioritaires du MVP (TDR §48) — données initiales (seed).
+ * Source de vérité en production : Supabase, via le back-office (/admin).
  *
  * Règle d'or (TDR §6, règle 7) : seules les données confirmées par le dossier SOREMAC
  * figurent ici. Aucun prix, stock, norme ou certification n'est inventé : l'interface
@@ -10,7 +11,7 @@ import type { Product } from "./types";
 
 const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?w=${w}&q=80&auto=format&fit=crop`;
 
-export const products: Product[] = [
+export const seedProducts: Product[] = [
   {
     slug: "fer-a-beton",
     name: "Fer à béton",
@@ -285,20 +286,5 @@ export const products: Product[] = [
     status: "published",
   },
 ];
-
-export const published = products.filter((p) => p.status === "published");
-
-export const getProduct = (slug: string) => published.find((p) => p.slug === slug);
-export const getProductsByCategory = (cat: string) => published.filter((p) => p.category === cat);
-export const getFeatured = () => published.filter((p) => p.featured);
-
-/** Produits associés : liste éditoriale d'abord, puis complétée par la catégorie. */
-export function getRelated(product: Product, limit = 4): Product[] {
-  const explicit = (product.related ?? []).map(getProduct).filter((p): p is Product => !!p);
-  const fill = published.filter(
-    (p) => p.slug !== product.slug && p.category === product.category && !explicit.includes(p),
-  );
-  return [...explicit, ...fill].slice(0, limit);
-}
 
 export const productUrl = (p: Pick<Product, "category" | "slug">) => `/produits/${p.category}/${p.slug}`;

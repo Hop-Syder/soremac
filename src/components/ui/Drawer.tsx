@@ -8,7 +8,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { X } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react/ssr";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { EASE } from "@/components/motion/tokens";
@@ -42,7 +42,7 @@ export function Drawer({
           <Dialog.Portal forceMount>
             <Dialog.Overlay asChild forceMount>
               <motion.div
-                className="fixed inset-0 z-[60] bg-ink/55 backdrop-blur-[2px]"
+                className="fixed inset-0 z-[60] bg-ink/45 backdrop-blur-sm"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -54,7 +54,7 @@ export function Drawer({
                 className={cn(
                   "fixed z-[61] flex flex-col bg-paper shadow-2xl outline-none",
                   side === "bottom"
-                    ? "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-xl"
+                    ? "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-3xl"
                     : cn("inset-y-0 w-full sm:max-w-[460px]", side === "right" ? "right-0" : "left-0"),
                   className,
                 )}
@@ -72,7 +72,7 @@ export function Drawer({
                 {side === "bottom" && <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-line" aria-hidden />}
                 <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
                   <div>
-                    <Dialog.Title className="font-display text-2xl font-bold uppercase">{title}</Dialog.Title>
+                    <Dialog.Title className="font-display text-2xl font-semibold tracking-tight">{title}</Dialog.Title>
                     {description ? (
                       <Dialog.Description className="mt-1 text-sm text-steel">{description}</Dialog.Description>
                     ) : (
@@ -80,7 +80,7 @@ export function Drawer({
                     )}
                   </div>
                   <Dialog.Close className="-mr-2 grid size-11 place-items-center rounded-full text-steel transition-colors hover:bg-paper-2 hover:text-ink" aria-label="Fermer">
-                    <X size={20} />
+                    <XIcon size={20} />
                   </Dialog.Close>
                 </header>
                 <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>

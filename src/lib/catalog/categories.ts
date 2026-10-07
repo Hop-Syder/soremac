@@ -1,5 +1,6 @@
 /**
- * Les 11 familles du catalogue SOREMAC.
+ * Les 11 familles du catalogue SOREMAC — données initiales (seed).
+ * Source de vérité en production : Supabase, via le back-office (/admin).
  * NB : les visuels Unsplash sont des emplacements provisoires à remplacer par la
  * production photo SOREMAC (direction artistique TDR §49).
  * @hopsyder
@@ -8,7 +9,7 @@ import type { Category } from "./types";
 
 const u = (id: string, w = 1400) => `https://images.unsplash.com/${id}?w=${w}&q=80&auto=format&fit=crop`;
 
-export const categories: Category[] = [
+export const seedCategories: Category[] = [
   {
     slug: "acier-fer",
     name: "Acier & Fer",
@@ -115,5 +116,3 @@ export const categories: Category[] = [
     related: ["cimenterie-liants", "acier-fer", "maconnerie"],
   },
 ];
-
-export const getCategory = (slug: string) => categories.find((c) => c.slug === slug);
