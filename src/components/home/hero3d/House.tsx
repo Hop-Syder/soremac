@@ -14,14 +14,55 @@ import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { EXPLODE, LABELS, type HeroState, type PartKey } from "./state";
 
+/* ───────────── Textures procédurales (générées en code, aucun fichier) ───────────── */
+function canvasTexture(w: number, h: number, draw: (c: CanvasRenderingContext2D) => void, repeat: [number, number] = [1, 1]) {
+  if (typeof document === "undefined") return null;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  draw(cv.getContext("2d")!);
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(...repeat);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+/** Béton de parpaing : grain + pores */
+const concreteTex = canvasTexture(256, 256, (c) => {
+  c.fillStyle = "#9aa6b2"; c.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 9000; i++) {
+    const v = 120 + Math.random() * 70;
+    c.fillStyle = `rgba(${v},${v + 6},${v + 14},${0.25 + Math.random() * 0.35})`;
+    c.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2);
+  }
+  for (let i = 0; i < 260; i++) { c.fillStyle = "rgba(40,48,58,.45)"; c.beginPath(); c.arc(Math.random() * 256, Math.random() * 256, Math.random() * 1.6, 0, 7); c.fill(); }
+});
+/** Tôle : métal brossé */
+const metalTex = canvasTexture(256, 64, (c) => {
+  c.fillStyle = "#a8b6c6"; c.fillRect(0, 0, 256, 64);
+  for (let y = 0; y < 64; y++) { const v = 150 + Math.random() * 60; c.fillStyle = `rgba(${v},${v + 8},${v + 18},.35)`; c.fillRect(0, y, 256, 1); }
+}, [1, 4]);
+/** Lames de bois de la terrasse */
+const woodTex = canvasTexture(512, 64, (c) => {
+  const g = c.createLinearGradient(0, 0, 0, 64); g.addColorStop(0, "#8a5a3b"); g.addColorStop(1, "#6e4630");
+  c.fillStyle = g; c.fillRect(0, 0, 512, 64);
+  for (let i = 0; i < 60; i++) { c.strokeStyle = `rgba(40,22,12,${0.15 + Math.random() * 0.2})`; c.beginPath(); const y = Math.random() * 64; c.moveTo(0, y); c.bezierCurveTo(170, y + 6, 340, y - 6, 512, y + Math.random() * 4); c.stroke(); }
+});
+
 /* ───────────── Matériaux ───────────── */
 const HOLO = new THREE.Color(0.55, 2.1, 2.6); // cyan > 1 → capté par le bloom
 const mat = {
-  block: new THREE.MeshStandardMaterial({ color: "#7d93ab", roughness: 0.85, metalness: 0.05, emissive: "#0e7490", emissiveIntensity: 0.08 }),
+  block: new THREE.MeshStandardMaterial({ color: "#c3cdd8", map: concreteTex, roughness: 0.92, metalness: 0.02, emissive: "#0e7490", emissiveIntensity: 0.05 }),
   slab: new THREE.MeshStandardMaterial({ color: "#5f748c", roughness: 0.9, emissive: "#0e7490", emissiveIntensity: 0.06 }),
-  glass: new THREE.MeshPhysicalMaterial({ color: "#7dd3fc", roughness: 0.15, metalness: 0.3, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false }),
+  glass: new THREE.MeshPhysicalMaterial({ color: "#9bd7f5", roughness: 0.06, metalness: 0.2, clearcoat: 1, envMapIntensity: 1.6, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }),
   frame: new THREE.MeshStandardMaterial({ color: "#1f2a37", roughness: 0.5, metalness: 0.6 }),
-  roof: new THREE.MeshStandardMaterial({ color: "#9fb3c8", roughness: 0.35, metalness: 0.75, emissive: "#0891b2", emissiveIntensity: 0.06 }),
+  roof: new THREE.MeshStandardMaterial({ color: "#c6d2df", map: metalTex, roughness: 0.32, metalness: 0.8, emissive: "#0891b2", emissiveIntensity: 0.05 }),
+  wood: new THREE.MeshStandardMaterial({ color: "#ffffff", map: woodTex, roughness: 0.7, metalness: 0 }),
+  warm: new THREE.MeshStandardMaterial({ color: "#ffd9a8", emissive: "#ffb066", emissiveIntensity: 2.2, toneMapped: false }),
+  interior: new THREE.MeshStandardMaterial({ color: "#3a3129", emissive: "#ffb27a", emissiveIntensity: 0.12, roughness: 0.9 }),
+  leaf: new THREE.MeshStandardMaterial({ color: "#3f6b4f", roughness: 0.9, flatShading: true, emissive: "#0f766e", emissiveIntensity: 0.08 }),
+  trunk: new THREE.MeshStandardMaterial({ color: "#5b4636", roughness: 1 }),
+  paver: new THREE.MeshStandardMaterial({ color: "#8d99a6", map: concreteTex, roughness: 0.95 }),
   rebar: new THREE.MeshStandardMaterial({ color: "#c9ced6", roughness: 0.32, metalness: 1, emissive: "#22d3ee", emissiveIntensity: 0.04 }),
   steel: new THREE.MeshStandardMaterial({ color: "#8a96a8", roughness: 0.28, metalness: 0.95, emissive: "#1d4ed8", emissiveIntensity: 0.04 }),
   tile: new THREE.MeshPhysicalMaterial({ color: "#f5f7fa", roughness: 0.12, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.08, iridescence: 1, iridescenceIOR: 1.35, iridescenceThicknessRange: [180, 620] }),
@@ -131,6 +172,51 @@ function Upper() {
       {/* Baie + porte du RDC */}
       <Block size={[0.04, 1.9, 3.2]} position={[A.x1 - 0.12, 1.45, -0.6]} material={mat.glass} edges />
       <Block size={[1.2, 2.3, 0.06]} position={[2.2, 1.15, A.z1 - 0.1]} material={mat.frame} edges />
+      <Block size={[0.05, 0.3, 0.05]} position={[2.65, 1.1, A.z1 - 0.04]} material={mat.steel} />
+      {/* Intérieur chaleureux visible à travers les vitrages */}
+      <Block size={[B.x1 - B.x0 - 0.4, 0.04, B.z1 - B.z0 - 0.4]} position={[(B.x0 + B.x1) / 2, B.y0 + 0.3, (B.z0 + B.z1) / 2]} material={mat.interior} />
+      <Block size={[3.4, 0.04, 2.2]} position={[A.x1 - 1.9, 0.04, -0.6]} material={mat.interior} />
+      <pointLight position={[3, 4.6, -0.5]} color="#ffb066" intensity={14} distance={9} decay={1.8} />
+      {/* Appliques murales */}
+      {[1.3, 3.1].map((x) => <Block key={x} size={[0.16, 0.26, 0.08]} position={[x, 2.15, A.z1 + 0.05]} material={mat.warm} />)}
+      {/* Gouttière + descente */}
+      <mesh position={[(B.x0 + B.x1) / 2, B.y1 + 0.02, B.z1 + 0.32]} rotation={[0, 0, Math.PI / 2]} material={mat.steel}><cylinderGeometry args={[0.07, 0.07, B.x1 - B.x0 + 0.6, 12]} /></mesh>
+      <mesh position={[B.x1 + 0.2, B.y1 / 2, B.z1 + 0.32]} material={mat.steel}><cylinderGeometry args={[0.05, 0.05, B.y1, 10]} /></mesh>
+    </group>
+  );
+}
+
+/** Terrasse en bois sous le porte-à-faux + allée + végétation (réalisme, reste en place). */
+function Landscape() {
+  const planks = useMemo(() => {
+    const items: { p: V3 }[] = [];
+    for (let z = B.z0 + 0.2; z < B.z1 - 0.1; z += 0.2) items.push({ p: [(A.x1 + B.x1) / 2 + 0.1, 0.06, z] });
+    return { geo: new THREE.BoxGeometry(B.x1 - A.x1 - 0.2, 0.06, 0.17), items };
+  }, []);
+  const pavers = useMemo(() => {
+    const items: { p: V3 }[] = [];
+    for (let i = 0; i < 6; i++) items.push({ p: [2.2 + (i % 2 ? 0.15 : -0.15), 0.02, A.z1 + 0.6 + i * 0.75] });
+    return { geo: new THREE.BoxGeometry(1.1, 0.05, 0.55), items };
+  }, []);
+  const trees: { p: V3; s: number }[] = [
+    { p: [-6.4, 0, 3.2], s: 1.1 },
+    { p: [-6.8, 0, -1.6], s: 1.4 },
+    { p: [9.4, 0, 3.8], s: 0.9 },
+  ];
+  return (
+    <group>
+      <Instances geometry={planks.geo} material={mat.wood} items={planks.items} />
+      <Instances geometry={pavers.geo} material={mat.paver} items={pavers.items} />
+      {trees.map((t, i) => (
+        <group key={i} position={t.p} scale={t.s}>
+          <mesh position={[0, 0.7, 0]} material={mat.trunk} castShadow><cylinderGeometry args={[0.08, 0.12, 1.4, 8]} /></mesh>
+          <mesh position={[0, 1.9, 0]} material={mat.leaf} castShadow><icosahedronGeometry args={[0.85, 1]} /></mesh>
+          <mesh position={[0.35, 1.45, 0.2]} material={mat.leaf} castShadow><icosahedronGeometry args={[0.55, 1]} /></mesh>
+        </group>
+      ))}
+      {/* Jardinière basse en blocs */}
+      <Block size={[2.6, 0.45, 0.5]} position={[-2.8, 0.22, A.z1 + 1.2]} material={mat.block} />
+      {[-3.6, -2.8, -2].map((x) => <mesh key={x} position={[x, 0.62, A.z1 + 1.2]} material={mat.leaf} castShadow><icosahedronGeometry args={[0.32, 0]} /></mesh>)}
     </group>
   );
 }
@@ -280,7 +366,7 @@ function Vehicle() {
 
 /* ───────────── Label holographique (HTML au-dessus du canvas) ───────────── */
 function Label({ part, state }: { part: (typeof LABELS)[number]; state: HeroState }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLAnchorElement>(null);
   useFrame(() => {
     if (!ref.current) return;
     const o = state.labels;
@@ -290,16 +376,21 @@ function Label({ part, state }: { part: (typeof LABELS)[number]; state: HeroStat
   });
   return (
     <Html position={part.at} center zIndexRange={[20, 10]}>
-      <div
+      <a
         ref={ref}
+        href={part.href}
         className="holo3d-label"
         style={{ opacity: 0 }}
         onPointerEnter={() => (state.hover = part.key)}
         onPointerLeave={() => (state.hover = null)}
+        aria-label={`${part.label} — voir les produits`}
       >
         <i />
-        {part.label}
-      </div>
+        <span>
+          {part.label}
+          <small>{part.hint} →</small>
+        </span>
+      </a>
     </Html>
   );
 }
@@ -341,6 +432,7 @@ export function House({ state, mobile }: { state: HeroState; mobile: boolean }) 
   return (
     <group position={[-1.5, 0, 0]}>
       <Upper />
+      <Landscape />
       {PARTS.filter((p) => !mobile || p.key !== "tools").map((p) => (
         <group key={p.key} ref={(g) => { if (g) groups.current[p.key] = g; }}>
           {p.node}

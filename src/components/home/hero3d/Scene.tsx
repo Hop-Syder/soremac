@@ -22,9 +22,11 @@ function CameraRig({ state, mobile }: { state: HeroState; mobile: boolean }) {
   const { camera } = useThree();
   const pos = useRef(new THREE.Vector3());
   useFrame((_, dt) => {
+    // Rotation automatique 360° (bouton) : ~18 s par tour
+    if (state.auto) state.yaw += dt * 0.35;
     const base = mobile ? 50 : 44;
     const r = base - state.dolly * 4 + state.pullback * 9;
-    const az = Math.PI / 4 + state.orbit + state.mouse.x * 0.035; // ~45° + rotation légère
+    const az = Math.PI / 4 + state.orbit + state.yaw + state.mouse.x * 0.035; // ~45° + rotation scroll + 360° utilisateur
     const el = 0.52 - state.mouse.y * 0.02; // élévation (rad)
     pos.current.set(TARGET.x + r * Math.cos(el) * Math.sin(az), TARGET.y + r * Math.sin(el), TARGET.z + r * Math.cos(el) * Math.cos(az));
     easing.damp3(camera.position, pos.current, 0.25, dt);

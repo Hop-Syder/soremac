@@ -231,3 +231,12 @@ html.lenis, html.lenis body { height: auto; }
 }
 .holo3d-label i { width: 6px; height: 6px; border-radius: 99px; background: #67e8f9; box-shadow: 0 0 8px #67e8f9; }
 .holo3d-label[data-active="1"] { box-shadow: 0 0 26px rgb(34 211 238 / 0.6); transform: scale(1.06); }
+.holo3d-label span { display: grid; gap: 4px; }
+.holo3d-label small { font-size: 10.5px; letter-spacing: .02em; font-weight: 500; color: rgb(165 243 252 / .75); text-transform: none; }
+.holo3d-label:hover { box-shadow: 0 0 28px rgb(34 211 238 / .6); }
+
+/* Contrôles 360° de la maquette */
+.holo360 { display: inline-flex; align-items: center; gap: 4px; padding: 5px; border-radius: 999px; background: rgb(8 20 36 / .62); border: 1px solid rgb(103 232 249 / .35); backdrop-filter: blur(8px); box-shadow: 0 10px 30px -12px rgb(0 0 0 / .6); }
+.holo360 button { height: 38px; min-width: 38px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #e0f7ff; font: 600 12px/1 var(--font-geist), sans-serif; letter-spacing: .06em; transition: background-color .2s, color .2s; }
+.holo360 button:hover { background: rgb(103 232 249 / .14); }
+.holo360 button[aria-pressed="true"] { background: #67e8f9; color: #06202b; }
