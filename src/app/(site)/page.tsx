@@ -7,7 +7,7 @@
  * @hopsyder
  */
 import { ArrowRightIcon } from "@phosphor-icons/react/ssr";
-import { Hero } from "@/components/home/Hero";
+import { HeroHolo } from "@/components/home/HeroHolo";
 import { Reassurance } from "@/components/home/Reassurance";
 import { CategoryBento } from "@/components/home/CategoryBento";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
@@ -32,11 +32,11 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 02 */}
-      <Hero />
+      {/* 02 — Hero holographique (le Hero standard reste disponible : components/home/Hero.tsx) */}
+      <HeroHolo />
 
       {/* 03 */}
-      <Reassurance />
+      <div className="pt-[var(--section-y)]"><Reassurance /></div>
 
       {/* 04 — Catégories */}
       <section className="section">
