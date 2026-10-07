@@ -10,7 +10,7 @@
 
 import { useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { EXPLODE, LABELS, type HeroState, type PartKey } from "./state";
 
@@ -345,21 +345,104 @@ function Tools() {
   );
 }
 
-function Vehicle() {
-  // Camion + palette : silhouettes holographiques secondaires (arrière-plan)
+/* ───────────── Camion de livraison SOREMAC (plateau chargé) ───────────── */
+const truckMat = {
+  paint: new THREE.MeshPhysicalMaterial({ color: "#f2701d", roughness: 0.32, metalness: 0.35, clearcoat: 1, clearcoatRoughness: 0.12 }),
+  white: new THREE.MeshPhysicalMaterial({ color: "#f3f5f7", roughness: 0.35, metalness: 0.2, clearcoat: 0.8 }),
+  dark: new THREE.MeshStandardMaterial({ color: "#1b2129", roughness: 0.55, metalness: 0.6 }),
+  chrome: new THREE.MeshStandardMaterial({ color: "#dfe5ec", roughness: 0.15, metalness: 1 }),
+  rubber: new THREE.MeshStandardMaterial({ color: "#121417", roughness: 0.9 }),
+  rim: new THREE.MeshStandardMaterial({ color: "#aab4c0", roughness: 0.3, metalness: 0.9 }),
+  glass: new THREE.MeshPhysicalMaterial({ color: "#0f2a3d", roughness: 0.05, metalness: 0.4, clearcoat: 1, envMapIntensity: 2 }),
+  head: new THREE.MeshStandardMaterial({ color: "#fff6e0", emissive: "#fff1c9", emissiveIntensity: 2.4, toneMapped: false }),
+  tail: new THREE.MeshStandardMaterial({ color: "#ff3b30", emissive: "#ff2d20", emissiveIntensity: 1.6, toneMapped: false }),
+  bed: new THREE.MeshStandardMaterial({ color: "#3a434e", roughness: 0.7, metalness: 0.5 }),
+  bag: new THREE.MeshStandardMaterial({ color: "#d8cdb6", roughness: 0.95 }),
+  bagBand: new THREE.MeshStandardMaterial({ color: "#2f6fb5", roughness: 0.8 }),
+  carton: new THREE.MeshStandardMaterial({ color: "#c9a77c", roughness: 0.9 }),
+  pallet: new THREE.MeshStandardMaterial({ color: "#a07850", roughness: 0.9 }),
+};
+
+function Wheel({ x, z }: { x: number; z: number }) {
+  const side = Math.sign(z);
   return (
-    <group position={[6.5, 0, -9.5]} rotation={[0, -0.25, 0]}>
-      <Block size={[4.6, 2.1, 2.1]} position={[0, 1.55, 0]} material={mat.holo} edges />
-      <Block size={[1.5, 1.6, 2.1]} position={[3.15, 1.3, 0]} material={mat.holo} edges />
-      {[-1.4, 1.2, 3.2].map((x) => (
-        <mesh key={x} position={[x, 0.42, 1.08]} rotation={[Math.PI / 2, 0, 0]} material={mat.holo}><cylinderGeometry args={[0.42, 0.42, 0.25, 16]} /></mesh>
-      ))}
-      <group position={[-1, 0, 3.4]}>
-        <Block size={[1.2, 0.14, 1]} position={[0, 0.07, 0]} material={mat.holo} edges />
-        {[[-0.3, -0.22], [0.3, -0.22], [-0.3, 0.22], [0.3, 0.22]].map(([x, z], i) => (
-          <Block key={i} size={[0.56, 0.2, 0.4]} position={[x, 0.25 + (i > 1 ? 0.2 : 0), z]} material={mat.holo} edges />
+    <group position={[x, 0.5, z]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh material={truckMat.rubber} castShadow><cylinderGeometry args={[0.5, 0.5, 0.36, 28]} /></mesh>
+      <mesh material={truckMat.rim} position={[0, side * 0.19, 0]}><cylinderGeometry args={[0.3, 0.3, 0.04, 20]} /></mesh>
+      <mesh material={truckMat.chrome} position={[0, side * 0.215, 0]}><cylinderGeometry args={[0.09, 0.09, 0.03, 12]} /></mesh>
+    </group>
+  );
+}
+
+function Vehicle() {
+  // Repère local : x = longueur (avant en +x), z = largeur
+  const rebar = useMemo(() => {
+    const items: { p: V3; r: V3 }[] = [];
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) items.push({ p: [-0.6, 1.33 + j * 0.07, -0.15 + i * 0.075], r: [0, 0, Math.PI / 2] });
+    return { geo: new THREE.CylinderGeometry(0.03, 0.03, 4.4, 8), items };
+  }, []);
+  const bags = useMemo(() => {
+    const items: { p: V3 }[] = [];
+    for (let l = 0; l < 3; l++) for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) items.push({ p: [-2.25 + i * 0.62, 1.47 + l * 0.2, 0.42 + j * 0.42] });
+    return { geo: new THREE.BoxGeometry(0.58, 0.18, 0.4), items };
+  }, []);
+  return (
+    <group position={[3.2, 0, -8.6]} rotation={[0, -0.12, 0]} scale={0.95}>
+      {/* Châssis + pare-chocs */}
+      <Block size={[6.9, 0.28, 1.1]} position={[0, 0.82, 0]} material={truckMat.dark} />
+      <Block size={[0.22, 0.32, 2.3]} position={[3.55, 0.72, 0]} material={truckMat.dark} />
+      <Block size={[0.18, 0.18, 2.2]} position={[-3.45, 0.82, 0]} material={truckMat.dark} />
+
+      {/* Cabine carrossée */}
+      <group position={[2.55, 0, 0]}>
+        <RoundedBox args={[1.9, 1.95, 2.3]} radius={0.16} smoothness={4} position={[0, 1.95, 0]} material={truckMat.paint} castShadow />
+        <RoundedBox args={[1.92, 0.5, 2.32]} radius={0.12} smoothness={4} position={[0, 1.12, 0]} material={truckMat.white} castShadow />
+        {/* Pare-brise incliné + vitres latérales */}
+        <mesh position={[0.97, 2.35, 0]} rotation={[0, 0, -0.08]} material={truckMat.glass}><boxGeometry args={[0.04, 0.8, 2.05]} /></mesh>
+        {[-1.16, 1.16].map((z) => <mesh key={z} position={[0.15, 2.35, z]} material={truckMat.glass}><boxGeometry args={[1.1, 0.7, 0.03]} /></mesh>)}
+        {/* Calandre, phares, clignotants */}
+        <Block size={[0.04, 0.42, 1.2]} position={[0.97, 1.45, 0]} material={truckMat.dark} />
+        {[-0.85, 0.85].map((z) => <Block key={z} size={[0.05, 0.16, 0.34]} position={[0.98, 1.3, z]} material={truckMat.head} />)}
+        {/* Rétroviseurs */}
+        {[-1.32, 1.32].map((z) => (
+          <group key={z}>
+            <Block size={[0.04, 0.04, 0.22]} position={[0.75, 2.35, z - Math.sign(z) * 0.1]} material={truckMat.dark} />
+            <Block size={[0.06, 0.32, 0.12]} position={[0.78, 2.3, z]} material={truckMat.dark} />
+          </group>
         ))}
+        {/* Panneau de porte (logo) */}
+        {[-1.165, 1.165].map((z) => <Block key={z} size={[0.7, 0.32, 0.01]} position={[-0.25, 1.7, z]} material={truckMat.white} />)}
       </group>
+
+      {/* Plateau */}
+      <Block size={[4.9, 0.14, 2.3]} position={[-0.95, 1.08, 0]} material={truckMat.bed} />
+      {[-1.15, 1.15].map((z) => <Block key={z} size={[4.9, 0.24, 0.06]} position={[-0.95, 1.27, z]} material={truckMat.paint} />)}
+      <Block size={[0.08, 0.9, 2.3]} position={[1.55, 1.6, 0]} material={truckMat.dark} />
+      {[-0.8, 0, 0.8].map((z) => <Block key={z} size={[0.08, 0.9, 0.06]} position={[1.55, 1.6, z]} material={truckMat.chrome} />)}
+
+      {/* Chargement : botte de fers à béton */}
+      <Instances geometry={rebar.geo} material={mat.rebar} items={rebar.items} />
+      {[-2.2, -0.6, 1].map((x) => <Block key={x} size={[0.06, 0.34, 0.42]} position={[x, 1.4, 0.0]} material={truckMat.bagBand} />)}
+
+      {/* Palette de sacs de ciment */}
+      <Block size={[1.3, 0.12, 0.9]} position={[-1.94, 1.21, 0.63]} material={truckMat.pallet} />
+      <Instances geometry={bags.geo} material={truckMat.bag} items={bags.items} />
+
+      {/* Cartons de carrelage */}
+      {[0, 1, 2].map((i) => (
+        <group key={i} position={[0.55, 1.29 + i * 0.16, -0.62]}>
+          <Block size={[0.95, 0.15, 0.62]} position={[0, 0, 0]} material={truckMat.carton} />
+          <Block size={[0.96, 0.04, 0.63]} position={[0, 0.02, 0]} material={truckMat.paint} />
+        </group>
+      ))}
+
+      {/* Feux arrière */}
+      {[-0.95, 0.95].map((z) => <Block key={z} size={[0.04, 0.14, 0.26]} position={[-3.42, 1.05, z]} material={truckMat.tail} />)}
+
+      {/* Roues : essieu avant + double essieu arrière */}
+      {[2.6, -1.3, -2.45].flatMap((x) => [-1.0, 1.0].map((z) => <Wheel key={`${x}${z}`} x={x} z={z} />))}
+      {/* Garde-boue */}
+      {[2.6, -1.88].map((x, i) => [-1.08, 1.08].map((z) => <Block key={`${x}${z}`} size={[i ? 2.2 : 1.15, 0.06, 0.42]} position={[x, 1.05, z]} material={truckMat.dark} />))}
     </group>
   );
 }

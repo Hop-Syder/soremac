@@ -10,7 +10,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, Grid, Lightformer, Sparkles } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
-import { easing } from "maath";
 import * as THREE from "three";
 import { House } from "./House";
 import type { HeroState } from "./state";
@@ -20,7 +19,9 @@ const TARGET = new THREE.Vector3(0.4, 2.6, 0.4);
 /** Caméra : 0 vue normale → dolly → légère rotation → recul (vue éclatée) → retour. */
 function CameraRig({ state, mobile }: { state: HeroState; mobile: boolean }) {
   const { camera } = useThree();
-  const pos = useRef(new THREE.Vector3());
+  // On amortit des coordonnées sphériques (angle, rayon) et non la position :
+  // la caméra suit l'arc autour de la maison, sans jamais traverser la scène.
+  const cur = useRef({ az: Math.PI / 4, r: mobile ? 50 : 44, el: 0.52 });
   useFrame((_, dt) => {
     // Rotation automatique 360° (bouton) : ~18 s par tour
     if (state.auto) state.yaw += dt * 0.35;
@@ -28,8 +29,11 @@ function CameraRig({ state, mobile }: { state: HeroState; mobile: boolean }) {
     const r = base - state.dolly * 4 + state.pullback * 9;
     const az = Math.PI / 4 + state.orbit + state.yaw + state.mouse.x * 0.035; // ~45° + rotation scroll + 360° utilisateur
     const el = 0.52 - state.mouse.y * 0.02; // élévation (rad)
-    pos.current.set(TARGET.x + r * Math.cos(el) * Math.sin(az), TARGET.y + r * Math.sin(el), TARGET.z + r * Math.cos(el) * Math.cos(az));
-    easing.damp3(camera.position, pos.current, 0.25, dt);
+    const c = cur.current;
+    c.az = THREE.MathUtils.damp(c.az, az, 6, dt);
+    c.r = THREE.MathUtils.damp(c.r, r, 6, dt);
+    c.el = THREE.MathUtils.damp(c.el, el, 6, dt);
+    camera.position.set(TARGET.x + c.r * Math.cos(c.el) * Math.sin(c.az), TARGET.y + c.r * Math.sin(c.el), TARGET.z + c.r * Math.cos(c.el) * Math.cos(c.az));
     camera.lookAt(TARGET);
   });
   return null;
