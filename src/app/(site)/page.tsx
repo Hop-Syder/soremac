@@ -32,7 +32,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 02 — Hero holographique (le Hero standard reste disponible : components/home/Hero.tsx) */}
+      {/* 02 — Hero holographique */}
       <HeroHolo />
 
       {/* 03 */}
