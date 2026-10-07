@@ -1,6 +1,7 @@
 /**
- * Hero holographique SOREMAC — styles de la scène 3D (CSS pur, accéléré GPU).
- * Toutes les animations tournent à l'infini ; .paused les fige (bouton + prefers-reduced-motion).
+ * Hero holographique SOREMAC — maquette architecturale pilotée par le scroll.
+ * Fond bleu nuit (jamais noir total), zone gauche très calme, scène à droite.
+ * Animations d'ambiance minimales (transform / opacity uniquement).
  * @hopsyder
  */
 
@@ -8,166 +9,65 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  min-height: 100svh;
-  background: radial-gradient(120% 90% at 70% 40%, #1a1f2e 0%, #0a0e17 62%);
+  height: 100svh;
+  min-height: 640px;
   color: #fff;
+  background:
+    radial-gradient(70% 80% at 74% 46%, rgb(34 98 160 / 0.42) 0%, transparent 62%),
+    radial-gradient(50% 60% at 18% 30%, rgb(124 92 255 / 0.10) 0%, transparent 70%),
+    linear-gradient(180deg, #0c1a2c 0%, #0a1524 55%, #0b1828 100%);
+}
+
+/* ───── Zone gauche : calme, lisible ───── */
+.calm { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.blueprint {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgb(103 232 249 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(103 232 249 / 0.05) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: linear-gradient(90deg, black 0%, rgb(0 0 0 / 0.5) 45%, transparent 70%);
+}
+.beam {
+  position: absolute; left: 0; height: 1px; width: 46%;
+  background: linear-gradient(90deg, transparent, rgb(103 232 249 / 0.35), transparent);
 }
 
 /* ───── Scène ───── */
-.stage { position: absolute; inset: 0; perspective: 1100px; perspective-origin: 62% 45%; pointer-events: none; }
-.world { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+.sceneWrap {
+  position: absolute; z-index: 1; pointer-events: none;
+  right: 0; top: 0; bottom: 0; width: 58%;
+}
+.scene { position: absolute; inset: 4% 0 2% -6%; will-change: transform; transform-origin: 55% 55%; pointer-events: auto; }
+.halo {
+  position: absolute; left: 50%; top: 52%; width: 70%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgb(103 232 249 / 0.16), rgb(59 130 246 / 0.08) 40%, transparent 68%);
+  border-radius: 999px;
+  animation: breathe 7s ease-in-out infinite;
+}
+@keyframes breathe { 50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.04); } }
 
-/* Grille néon au sol, infinie vers l'horizon */
-.floor {
-  position: absolute;
-  left: -80%; right: -80%; top: 46%; height: 150%;
-  transform: rotateX(70deg);
-  transform-origin: 50% 100%;
-  background-image:
-    linear-gradient(rgb(0 255 255 / 0.9) 1.5px, transparent 1.5px),
-    linear-gradient(90deg, rgb(0 128 255 / 0.85) 1.5px, transparent 1.5px);
-  filter: drop-shadow(0 0 4px rgb(0 255 255 / 0.6));
-  background-size: 64px 64px;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 100%);
-  animation: floor-run 3.2s linear infinite, floor-pulse 4s ease-in-out infinite;
-}
-@keyframes floor-run { to { background-position: 0 64px, 0 64px; } }
-@keyframes floor-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 0.8; } }
+/* Contenu */
+.content { position: relative; z-index: 2; height: 100%; }
 
-.horizon {
-  position: absolute; left: 0; right: 0; top: 52%; height: 220px; transform: translateY(-50%);
-  background: radial-gradient(60% 50% at 60% 50%, rgb(0 200 255 / 0.22), transparent 70%);
-  filter: blur(10px);
-}
+/* Indicateur de progression de la séquence */
+.progress { position: absolute; z-index: 3; right: clamp(16px, 3vw, 40px); top: 50%; transform: translateY(-50%); display: grid; gap: 10px; }
+.progress span { width: 2px; height: 26px; border-radius: 2px; background: rgb(255 255 255 / 0.15); overflow: hidden; position: relative; }
+.progress span i { position: absolute; inset: 0; background: #67e8f9; transform-origin: top; transform: scaleY(0); }
 
-/* Calques de profondeur (parallaxe) */
-.layer { position: absolute; inset: 0; transform-style: preserve-3d; }
+.scrollHint { position: absolute; z-index: 3; left: 50%; bottom: 22px; transform: translateX(-50%); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: rgb(255 255 255 / 0.55); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.scrollHint::after { content: ""; width: 1px; height: 28px; background: linear-gradient(#67e8f9, transparent); animation: hint 2.2s ease-in-out infinite; transform-origin: top; }
+@keyframes hint { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
 
-/* ───── Barres de fer à béton ───── */
-.rebar {
-  position: absolute;
-  height: var(--d, 16px);
-  width: var(--l, 46%);
-  transform-style: preserve-3d;
-  transform: translateZ(var(--z, 0px)) rotateZ(var(--rz, -24deg));
-  animation: drift var(--dur, 9s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-}
-.rebarBody {
-  position: absolute; inset: 0; border-radius: 999px;
-  /* volume cylindrique */
-  background: linear-gradient(180deg, #ffffff 0%, #d8dce3 18%, #c0c0c0 34%, #6e7480 62%, #2a2f3a 84%, #8f96a3 100%);
-  box-shadow: 0 0 22px rgb(0 255 255 / 0.25), 0 10px 30px -8px rgb(0 0 0 / 0.8);
-  overflow: hidden;
-}
-/* nervures hélicoïdales : leur défilement simule la rotation sur l'axe */
-.rebarBody::before {
-  content: ""; position: absolute; inset: 0;
-  background: repeating-linear-gradient(110deg, rgb(10 14 23 / 0.45) 0 2px, transparent 2px 9px, rgb(255 255 255 / 0.25) 9px 10px, transparent 10px 14px);
-  animation: spin-ribs 2.6s linear infinite;
-}
-/* reflet irisé bleu-violet-argent qui glisse le long des nervures */
-.rebarBody::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgb(56 189 248 / 0.65) 42%, rgb(167 139 250 / 0.6) 50%, rgb(255 255 255 / 0.7) 55%, transparent 70%);
-  background-size: 260% 100%;
-  mix-blend-mode: screen;
-  animation: sheen 4.2s ease-in-out infinite;
-}
-@keyframes spin-ribs { to { background-position: 28px 0; } }
-@keyframes sheen { from { background-position: 160% 0; } to { background-position: -60% 0; } }
-@keyframes drift {
-  0%, 100% { transform: translateZ(var(--z, 0px)) rotateZ(var(--rz, -24deg)) translate3d(0, 0, 0); }
-  50% { transform: translateZ(var(--z, 0px)) rotateZ(calc(var(--rz, -24deg) + 3deg)) translate3d(18px, -26px, 30px); }
+/* Mobile : scène en haut, texte en bas */
+@media (max-width: 1023px) {
+  .sceneWrap { width: 100%; bottom: auto; height: 52%; top: 64px; }
+  .scene { inset: -8% -16% -4% -16%; }
+  .progress { display: none; }
+  .scrollHint { display: none; }
 }
 
-/* ───── Carreaux 60×60 (boîte 3D : face + 2 tranches) ───── */
-.tile {
-  position: absolute;
-  width: var(--s, 150px); height: var(--s, 150px);
-  transform-style: preserve-3d;
-  transform: translateZ(var(--z, 0px)) rotateX(var(--rx, 50deg)) rotateZ(var(--rz, 30deg));
-  animation: tile-float var(--dur, 8s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-}
-.tileTop {
-  position: absolute; inset: 0; border-radius: 6px;
-  background:
-    linear-gradient(135deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.15) 40%, transparent 60%),
-    conic-gradient(from var(--hue, 200deg), #f5f5f5, #fbcfe8, #c4b5fd, #7dd3fc, #a7f3d0, #fde68a, #f5f5f5);
-  background-size: 100% 100%, 200% 200%;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.8), 0 0 30px rgb(0 255 255 / 0.25);
-  animation: iridesce 6s linear infinite;
-}
-/* joints : 2×2 carreaux de 30 */
-.tileTop::after {
-  content: ""; position: absolute; inset: 0; border-radius: inherit;
-  background:
-    linear-gradient(90deg, transparent calc(50% - 1px), #d4d6db 50%, transparent calc(50% + 1px)),
-    linear-gradient(transparent calc(50% - 1px), #d4d6db 50%, transparent calc(50% + 1px));
-}
-.tileEdgeX, .tileEdgeY {
-  position: absolute; background: linear-gradient(90deg, #e9e4dc, #cfc6b8 60%, #b8ad9c);
-  box-shadow: inset 0 0 0 1px rgb(0 255 255 / 0.25);
-}
-.tileEdgeX { left: 0; right: 0; bottom: 0; height: 14px; transform-origin: bottom; transform: rotateX(-90deg); }
-.tileEdgeY { top: 0; bottom: 0; right: 0; width: 14px; transform-origin: right; transform: rotateY(90deg); }
-@keyframes iridesce { to { background-position: 0 0, 200% 200%; } }
-@keyframes tile-float {
-  0%, 100% { transform: translateZ(var(--z, 0px)) rotateX(var(--rx, 50deg)) rotateZ(var(--rz, 30deg)) translateZ(0); }
-  50% { transform: translateZ(var(--z, 0px)) rotateX(calc(var(--rx, 50deg) - 8deg)) rotateZ(calc(var(--rz, 30deg) + 10deg)) translateZ(40px); }
-}
-
-/* ───── Tubes PVC translucides (plomberie) ───── */
-.pipe {
-  position: absolute; width: var(--l, 28%); height: 26px; border-radius: 999px;
-  transform: translateZ(var(--z, -200px)) rotateZ(var(--rz, 18deg));
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.35), rgb(125 211 252 / 0.12) 40%, rgb(255 255 255 / 0.05) 60%, rgb(125 211 252 / 0.25));
-  border: 1px solid rgb(125 211 252 / 0.35);
-  box-shadow: 0 0 24px rgb(0 128 255 / 0.25);
-  animation: drift 12s ease-in-out infinite;
-}
-
-/* ───── Poussière lumineuse (ciment / Sika) ───── */
-.dust { position: absolute; width: 3px; height: 3px; border-radius: 999px; background: #bff7ff; box-shadow: 0 0 8px #00ffff; opacity: 0; animation: dust var(--dur, 9s) linear infinite; animation-delay: var(--delay, 0s); }
-@keyframes dust { 0% { transform: translate3d(0, 0, 0); opacity: 0; } 15% { opacity: 0.9; } 100% { transform: translate3d(var(--dx, 40px), -220px, 0); opacity: 0; } }
-
-/* ───── Faisceau de scan vertical (balayage gauche ↔ droite) ───── */
-.scan {
-  position: absolute; top: 0; bottom: 0; left: 0; width: 160px;
-  background: linear-gradient(90deg, transparent, rgb(0 255 136 / 0.12) 40%, rgb(0 255 136 / 0.4) 50%, rgb(0 255 136 / 0.12) 60%, transparent);
-  mix-blend-mode: screen;
-  animation: scan 4.6s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-.scan::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: #00ff88; box-shadow: 0 0 12px #00ff88, 0 0 30px #00ff88; }
-@keyframes scan { from { transform: translateX(-10vw); } to { transform: translateX(105vw); } }
-
-/* ───── Étiquettes HUD ───── */
-.hud {
-  position: absolute; z-index: 3;
-  font: 600 12.5px/1 ui-monospace, "SFMono-Regular", Menlo, monospace;
-  letter-spacing: 0.06em;
-  color: #cffafe;
-  padding: 10px 14px;
-  background: rgb(0 0 0 / 0.7);
-  border: 1px solid #00ffff;
-  border-radius: 4px;
-  box-shadow: 0 0 18px rgb(0 255 255 / 0.35), inset 0 0 12px rgb(0 255 255 / 0.12);
-  backdrop-filter: blur(4px);
-  animation: hud-fade 3.6s ease-in-out infinite;
-  pointer-events: none;
-}
-.hud::before { content: ""; position: absolute; left: -1px; top: -1px; width: 8px; height: 8px; border-left: 2px solid #00ffff; border-top: 2px solid #00ffff; }
-.hud::after { content: ""; position: absolute; right: -1px; bottom: -1px; width: 8px; height: 8px; border-right: 2px solid #00ffff; border-bottom: 2px solid #00ffff; }
-@keyframes hud-fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-
-/* Lisibilité du texte : voile à gauche */
-.veil { position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, #0a0e17 0%, rgb(10 14 23 / 0.85) 32%, rgb(10 14 23 / 0.2) 62%, transparent 80%); }
-.veilMobile { position: absolute; inset: 0; z-index: 1; background: linear-gradient(0deg, #0a0e17 0%, rgb(10 14 23 / 0.85) 45%, rgb(10 14 23 / 0.25) 75%, transparent); }
-
-/* Pause : bouton utilisateur ou prefers-reduced-motion */
-.paused *, .paused *::before, .paused *::after { animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce) {
-  .hero *, .hero *::before, .hero *::after { animation: none !important; }
+  .hero { height: auto; min-height: 100svh; }
+  .halo, .scrollHint::after { animation: none; }
 }
