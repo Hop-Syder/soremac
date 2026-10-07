@@ -66,9 +66,9 @@
 
 @layer components {
   /* Conteneur unique : 1280px utiles, gouttières 20 → 40px */
-  .shell { @apply mx-auto w-full max-w-[1360px] px-5 sm:px-8 lg:px-10; }
+  .shell { @apply mx-auto w-full max-w-[1360px] px-5 sm:px-8 lg:px-10 2xl:max-w-[1600px] 2xl:px-14; }
   /* Alias historique (back-office) */
-  .container-x { @apply mx-auto w-full max-w-[1360px] px-5 sm:px-8 lg:px-10; }
+  .container-x { @apply mx-auto w-full max-w-[1360px] px-5 sm:px-8 lg:px-10 2xl:max-w-[1600px] 2xl:px-14; }
   .section { padding-block: var(--section-y); }
 
   /* Hiérarchie typographique */
