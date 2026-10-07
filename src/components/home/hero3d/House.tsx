@@ -58,6 +58,9 @@ const mat = {
   frame: new THREE.MeshStandardMaterial({ color: "#1f2a37", roughness: 0.5, metalness: 0.6 }),
   roof: new THREE.MeshStandardMaterial({ color: "#c6d2df", map: metalTex, roughness: 0.32, metalness: 0.8, emissive: "#0891b2", emissiveIntensity: 0.05 }),
   wood: new THREE.MeshStandardMaterial({ color: "#ffffff", map: woodTex, roughness: 0.7, metalness: 0 }),
+  render: new THREE.MeshPhysicalMaterial({ color: "#eceae6", roughness: 0.88, metalness: 0, clearcoat: 0.05, emissive: "#0e7490", emissiveIntensity: 0.02 }),
+  alu: new THREE.MeshStandardMaterial({ color: "#2b3138", roughness: 0.38, metalness: 0.7 }),
+  slat: new THREE.MeshStandardMaterial({ color: "#d9a273", map: woodTex, roughness: 0.62, metalness: 0 }),
   warm: new THREE.MeshStandardMaterial({ color: "#ffd9a8", emissive: "#ffb066", emissiveIntensity: 2.2, toneMapped: false }),
   interior: new THREE.MeshStandardMaterial({ color: "#3a3129", emissive: "#ffb27a", emissiveIntensity: 0.12, roughness: 0.9 }),
   leaf: new THREE.MeshStandardMaterial({ color: "#3f6b4f", roughness: 0.9, flatShading: true, emissive: "#0f766e", emissiveIntensity: 0.08 }),
@@ -72,7 +75,7 @@ const mat = {
   tool: new THREE.MeshStandardMaterial({ color: "#f2701d", roughness: 0.45, metalness: 0.2, emissive: "#f2701d", emissiveIntensity: 0.12 }),
   toolDark: new THREE.MeshStandardMaterial({ color: "#2a313c", roughness: 0.5, metalness: 0.6 }),
   holo: new THREE.MeshStandardMaterial({ color: "#67e8f9", transparent: true, opacity: 0.12, emissive: "#22d3ee", emissiveIntensity: 0.3, depthWrite: false }),
-  edge: new THREE.LineBasicMaterial({ color: HOLO, toneMapped: false, transparent: true, opacity: 0.75 }),
+  edge: new THREE.LineBasicMaterial({ color: HOLO, toneMapped: false, transparent: true, opacity: 0.42 }),
 };
 
 /** Matériaux par famille → surbrillance au survol de son label. */
@@ -103,18 +106,24 @@ function Block({ size, position, material, edges = false, rotation }: { size: V3
 }
 
 /** Instanced mesh à partir d'une liste de matrices. */
-function Instances({ geometry, material, items }: { geometry: THREE.BufferGeometry; material: THREE.Material; items: { p: V3; r?: V3; s?: V3 }[] }) {
+/** Variation de teinte pseudo-aléatoire stable (même rendu à chaque visite). */
+const jitter = (i: number, amount: number) => 1 - amount / 2 + (((Math.sin(i * 12.9898) * 43758.5453) % 1 + 1) % 1) * amount;
+
+function Instances({ geometry, material, items, vary = 0 }: { geometry: THREE.BufferGeometry; material: THREE.Material; items: { p: V3; r?: V3; s?: V3 }[]; vary?: number }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   useLayoutEffect(() => {
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
+    const c = new THREE.Color();
     items.forEach((it, i) => {
       q.setFromEuler(new THREE.Euler(...(it.r ?? [0, 0, 0])));
       m.compose(new THREE.Vector3(...it.p), q, new THREE.Vector3(...(it.s ?? [1, 1, 1])));
       ref.current!.setMatrixAt(i, m);
+      if (vary) ref.current!.setColorAt(i, c.setScalar(jitter(i, vary)));
     });
     ref.current!.instanceMatrix.needsUpdate = true;
-  }, [items]);
+    if (ref.current!.instanceColor) ref.current!.instanceColor.needsUpdate = true;
+  }, [items, vary]);
   return <instancedMesh ref={ref} args={[geometry, material, items.length]} castShadow receiveShadow />;
 }
 
@@ -154,25 +163,68 @@ function Concrete() {
   const { geo, items } = useBlocks();
   return (
     <>
-      <Instances geometry={geo} material={mat.block} items={items} />
+      <Instances geometry={geo} material={mat.block} items={items} vary={0.18} />
       <Block size={[9.6, 0.3, 6.6]} position={[0, -0.15, 0]} material={mat.slab} edges />
     </>
   );
 }
 
 function Upper() {
-  // Volume vitré + dalle + menuiseries (structure, reste en place)
-  const mullions = useMemo(() => Array.from({ length: 7 }, (_, i) => B.x0 + 0.6 + i * 1.3), []);
+  // Étage contemporain (structure, reste en place) :
+  // façades arrière/gauche en enduit blanc + bardage bois, façades avant/droite vitrées toute hauteur.
+  const H = B.y1 - B.y0 - 0.28; // hauteur libre
+  const WOOD = 2.6; // largeur de la section bardée bois en façade avant
+  const yMid = B.y0 + 0.28 + H / 2;
+  const frames = useMemo(() => {
+    const items: { p: V3; s?: V3; r?: V3 }[] = [];
+    // Montants façade avant (z = B.z1) et droite (x = B.x1)
+    for (let x = B.x0 + WOOD + 1.3; x < B.x1 - 0.1; x += 1.3) items.push({ p: [x, yMid, B.z1 - 0.02] });
+    for (let z = B.z0 + 1.5; z < B.z1 - 0.1; z += 1.5) items.push({ p: [B.x1 - 0.02, yMid, z] });
+    return { geo: new THREE.BoxGeometry(0.07, H, 0.07), items };
+  }, [H, yMid, WOOD]);
+  const slats = useMemo(() => {
+    const items: { p: V3; r?: V3 }[] = [];
+    for (let z = B.z0 + 0.15; z < B.z1 - 0.05; z += 0.14) items.push({ p: [B.x0 - 0.06, yMid, z] });
+    // Façade avant : section bardée bois à gauche
+    for (let x = B.x0 + 0.08; x < B.x0 + WOOD; x += 0.14) items.push({ p: [x, yMid, B.z1 + 0.06], r: [0, Math.PI / 2, 0] });
+    return { geo: new THREE.BoxGeometry(0.05, H, 0.09), items };
+  }, [H, yMid, WOOD]);
   return (
     <group>
+      {/* Dalle d'étage */}
       <Block size={[B.x1 - B.x0 + 0.2, 0.28, B.z1 - B.z0 + 0.2]} position={[(B.x0 + B.x1) / 2, B.y0 + 0.14, (B.z0 + B.z1) / 2]} material={mat.slab} edges />
-      <Block size={[B.x1 - B.x0, B.y1 - B.y0 - 0.28, B.z1 - B.z0]} position={[(B.x0 + B.x1) / 2, (B.y0 + 0.28 + B.y1) / 2, (B.z0 + B.z1) / 2]} material={mat.glass} edges />
-      {mullions.map((x) => <Block key={x} size={[0.06, B.y1 - B.y0 - 0.28, 0.06]} position={[x, (B.y0 + 0.28 + B.y1) / 2, B.z1]} material={mat.frame} />)}
-      <Block size={[0.06, B.y1 - B.y0 - 0.28, 0.06]} position={[B.x1, (B.y0 + 0.28 + B.y1) / 2, B.z1]} material={mat.frame} />
-      {/* Baie + porte du RDC */}
+
+      {/* Murs enduits (arrière + gauche) */}
+      <Block size={[B.x1 - B.x0, H, 0.22]} position={[(B.x0 + B.x1) / 2, yMid, B.z0 + 0.11]} material={mat.render} />
+      <Block size={[0.22, H, B.z1 - B.z0]} position={[B.x0 + 0.11, yMid, (B.z0 + B.z1) / 2]} material={mat.render} />
+      {/* Bardage bois vertical (façade gauche) */}
+      <Instances geometry={slats.geo} material={mat.slat} items={slats.items} vary={0.22} />
+
+      {/* Baies vitrées toute hauteur (avant + droite) */}
+      <Block size={[WOOD, H, 0.22]} position={[B.x0 + WOOD / 2, yMid, B.z1 - 0.11]} material={mat.render} />
+      <Block size={[B.x1 - B.x0 - WOOD, H, 0.04]} position={[B.x0 + WOOD + (B.x1 - B.x0 - WOOD) / 2, yMid, B.z1 - 0.02]} material={mat.glass} edges />
+      <Block size={[0.04, H, B.z1 - B.z0 - 0.3]} position={[B.x1 - 0.02, yMid, (B.z0 + B.z1) / 2 + 0.15]} material={mat.glass} edges />
+      <Instances geometry={frames.geo} material={mat.alu} items={frames.items} />
+      {/* Traverses haute et basse + angle */}
+      <Block size={[B.x1 - B.x0, 0.08, 0.08]} position={[(B.x0 + B.x1) / 2, B.y0 + 0.32, B.z1 - 0.02]} material={mat.alu} />
+      <Block size={[B.x1 - B.x0, 0.08, 0.08]} position={[(B.x0 + B.x1) / 2, B.y1 - 0.04, B.z1 - 0.02]} material={mat.alu} />
+      <Block size={[0.08, 0.08, B.z1 - B.z0]} position={[B.x1 - 0.02, B.y0 + 0.32, (B.z0 + B.z1) / 2]} material={mat.alu} />
+      <Block size={[0.08, 0.08, B.z1 - B.z0]} position={[B.x1 - 0.02, B.y1 - 0.04, (B.z0 + B.z1) / 2]} material={mat.alu} />
+      <Block size={[0.1, H, 0.1]} position={[B.x1 - 0.02, yMid, B.z1 - 0.02]} material={mat.alu} />
+
+      {/* RDC : baie coulissante encadrée */}
       <Block size={[0.04, 1.9, 3.2]} position={[A.x1 - 0.12, 1.45, -0.6]} material={mat.glass} edges />
-      <Block size={[1.2, 2.3, 0.06]} position={[2.2, 1.15, A.z1 - 0.1]} material={mat.frame} edges />
-      <Block size={[0.05, 0.3, 0.05]} position={[2.65, 1.1, A.z1 - 0.04]} material={mat.steel} />
+      <Block size={[0.1, 0.08, 3.3]} position={[A.x1 - 0.1, 2.42, -0.6]} material={mat.alu} />
+      <Block size={[0.1, 0.08, 3.3]} position={[A.x1 - 0.1, 0.48, -0.6]} material={mat.alu} />
+      {[-2.2, -0.6, 1].map((z) => <Block key={z} size={[0.1, 1.95, 0.07]} position={[A.x1 - 0.1, 1.45, z]} material={mat.alu} />)}
+
+      {/* Porte d'entrée en bois + encadrement + marches */}
+      <Block size={[1.3, 2.38, 0.1]} position={[2.2, 1.19, A.z1 - 0.06]} material={mat.alu} />
+      <Block size={[1.1, 2.25, 0.08]} position={[2.2, 1.14, A.z1 - 0.01]} material={mat.slat} />
+      <Block size={[0.04, 0.6, 0.05]} position={[2.62, 1.15, A.z1 + 0.05]} material={mat.steel} />
+      <Block size={[1.8, 0.12, 0.9]} position={[2.2, 0.06, A.z1 + 0.45]} material={mat.paver} />
+      <Block size={[1.8, 0.12, 0.5]} position={[2.2, 0.18, A.z1 + 0.25]} material={mat.paver} />
+
       {/* Intérieur chaleureux visible à travers les vitrages */}
       <Block size={[B.x1 - B.x0 - 0.4, 0.04, B.z1 - B.z0 - 0.4]} position={[(B.x0 + B.x1) / 2, B.y0 + 0.3, (B.z0 + B.z1) / 2]} material={mat.interior} />
       <Block size={[3.4, 0.04, 2.2]} position={[A.x1 - 1.9, 0.04, -0.6]} material={mat.interior} />
@@ -180,8 +232,8 @@ function Upper() {
       {/* Appliques murales */}
       {[1.3, 3.1].map((x) => <Block key={x} size={[0.16, 0.26, 0.08]} position={[x, 2.15, A.z1 + 0.05]} material={mat.warm} />)}
       {/* Gouttière + descente */}
-      <mesh position={[(B.x0 + B.x1) / 2, B.y1 + 0.02, B.z1 + 0.32]} rotation={[0, 0, Math.PI / 2]} material={mat.steel}><cylinderGeometry args={[0.07, 0.07, B.x1 - B.x0 + 0.6, 12]} /></mesh>
-      <mesh position={[B.x1 + 0.2, B.y1 / 2, B.z1 + 0.32]} material={mat.steel}><cylinderGeometry args={[0.05, 0.05, B.y1, 10]} /></mesh>
+      <mesh position={[(B.x0 + B.x1) / 2, B.y1 + 0.02, B.z1 + 0.32]} rotation={[0, 0, Math.PI / 2]} material={mat.alu}><cylinderGeometry args={[0.07, 0.07, B.x1 - B.x0 + 0.6, 12]} /></mesh>
+      <mesh position={[B.x1 + 0.2, B.y1 / 2, B.z1 + 0.32]} material={mat.alu}><cylinderGeometry args={[0.05, 0.05, B.y1, 10]} /></mesh>
     </group>
   );
 }
@@ -231,6 +283,11 @@ function Roof() {
     <>
       <Block size={[B.x1 - B.x0 + 0.6, 0.3, B.z1 - B.z0 + 0.6]} position={[(B.x0 + B.x1) / 2, B.y1 + 0.15, (B.z0 + B.z1) / 2]} material={mat.roof} edges />
       <Instances geometry={ribs.geo} material={mat.roof} items={ribs.items} />
+      {/* Acrotère / bandeau anthracite */}
+      <Block size={[B.x1 - B.x0 + 0.7, 0.42, 0.08]} position={[(B.x0 + B.x1) / 2, B.y1 + 0.24, B.z1 + 0.34]} material={mat.alu} />
+      <Block size={[B.x1 - B.x0 + 0.7, 0.42, 0.08]} position={[(B.x0 + B.x1) / 2, B.y1 + 0.24, B.z0 - 0.34]} material={mat.alu} />
+      <Block size={[0.08, 0.42, B.z1 - B.z0 + 0.76]} position={[B.x1 + 0.34, B.y1 + 0.24, (B.z0 + B.z1) / 2]} material={mat.alu} />
+      <Block size={[0.08, 0.42, B.z1 - B.z0 + 0.76]} position={[B.x0 - 0.34, B.y1 + 0.24, (B.z0 + B.z1) / 2]} material={mat.alu} />
     </>
   );
 }
@@ -290,7 +347,7 @@ function Tiles() {
     return out;
   }, []);
   const geo = useMemo(() => new THREE.BoxGeometry(0.76, 0.76, 0.05), []);
-  return <Instances geometry={geo} material={mat.tile} items={items} />;
+  return <Instances geometry={geo} material={mat.tile} items={items} vary={0.08} />;
 }
 
 function Electricity() {
