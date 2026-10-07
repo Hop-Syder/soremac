@@ -1,0 +1,353 @@
+/**
+ * Maison contemporaine modélisée en code (Three.js / React Three Fiber).
+ * Unités : mètres. x → droite, y → haut, z → vers la caméra.
+ * RDC maçonné (parpaings instanciés) · étage vitré en porte-à-faux · toiture nervurée ·
+ * cage d'armatures · profilés acier · carrelage irisé · réseau électrique · outils · camion.
+ * Chaque famille = un groupe déplacé par la séquence de scroll (state.explode[key]).
+ * @hopsyder
+ */
+"use client";
+
+import { useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
+import * as THREE from "three";
+import { EXPLODE, LABELS, type HeroState, type PartKey } from "./state";
+
+/* ───────────── Matériaux ───────────── */
+const HOLO = new THREE.Color(0.55, 2.1, 2.6); // cyan > 1 → capté par le bloom
+const mat = {
+  block: new THREE.MeshStandardMaterial({ color: "#7d93ab", roughness: 0.85, metalness: 0.05, emissive: "#0e7490", emissiveIntensity: 0.08 }),
+  slab: new THREE.MeshStandardMaterial({ color: "#5f748c", roughness: 0.9, emissive: "#0e7490", emissiveIntensity: 0.06 }),
+  glass: new THREE.MeshPhysicalMaterial({ color: "#7dd3fc", roughness: 0.15, metalness: 0.3, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false }),
+  frame: new THREE.MeshStandardMaterial({ color: "#1f2a37", roughness: 0.5, metalness: 0.6 }),
+  roof: new THREE.MeshStandardMaterial({ color: "#9fb3c8", roughness: 0.35, metalness: 0.75, emissive: "#0891b2", emissiveIntensity: 0.06 }),
+  rebar: new THREE.MeshStandardMaterial({ color: "#c9ced6", roughness: 0.32, metalness: 1, emissive: "#22d3ee", emissiveIntensity: 0.04 }),
+  steel: new THREE.MeshStandardMaterial({ color: "#8a96a8", roughness: 0.28, metalness: 0.95, emissive: "#1d4ed8", emissiveIntensity: 0.04 }),
+  tile: new THREE.MeshPhysicalMaterial({ color: "#f5f7fa", roughness: 0.12, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.08, iridescence: 1, iridescenceIOR: 1.35, iridescenceThicknessRange: [180, 620] }),
+  wire: new THREE.MeshStandardMaterial({ color: "#1e3a8a", emissive: "#3b82f6", emissiveIntensity: 2.4, toneMapped: false }),
+  spark: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 2.6, 3), toneMapped: false }),
+  panel: new THREE.MeshStandardMaterial({ color: "#0f172a", emissive: "#3b82f6", emissiveIntensity: 0.6, metalness: 0.4, roughness: 0.4 }),
+  tool: new THREE.MeshStandardMaterial({ color: "#f2701d", roughness: 0.45, metalness: 0.2, emissive: "#f2701d", emissiveIntensity: 0.12 }),
+  toolDark: new THREE.MeshStandardMaterial({ color: "#2a313c", roughness: 0.5, metalness: 0.6 }),
+  holo: new THREE.MeshStandardMaterial({ color: "#67e8f9", transparent: true, opacity: 0.12, emissive: "#22d3ee", emissiveIntensity: 0.3, depthWrite: false }),
+  edge: new THREE.LineBasicMaterial({ color: HOLO, toneMapped: false, transparent: true, opacity: 0.75 }),
+};
+
+/** Matériaux par famille → surbrillance au survol de son label. */
+const PART_MATS: Record<PartKey, THREE.MeshStandardMaterial[]> = {
+  roof: [mat.roof],
+  tile: [mat.tile],
+  rebar: [mat.rebar],
+  steel: [mat.steel],
+  concrete: [mat.block, mat.slab],
+  electricity: [mat.wire, mat.panel],
+  tools: [mat.tool],
+};
+const BASE_EMISSIVE = new Map<THREE.MeshStandardMaterial, number>(Object.values(PART_MATS).flat().map((m) => [m, m.emissiveIntensity]));
+
+/* ───────────── Primitives ───────────── */
+type V3 = [number, number, number];
+
+/** Boîte avec arêtes holographiques optionnelles. */
+function Block({ size, position, material, edges = false, rotation }: { size: V3; position: V3; material: THREE.Material; edges?: boolean; rotation?: V3 }) {
+  const geo = useMemo(() => new THREE.BoxGeometry(...size), [size]);
+  const edgeGeo = useMemo(() => (edges ? new THREE.EdgesGeometry(geo) : null), [geo, edges]);
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh geometry={geo} material={material} castShadow receiveShadow />
+      {edgeGeo && <lineSegments geometry={edgeGeo} material={mat.edge} />}
+    </group>
+  );
+}
+
+/** Instanced mesh à partir d'une liste de matrices. */
+function Instances({ geometry, material, items }: { geometry: THREE.BufferGeometry; material: THREE.Material; items: { p: V3; r?: V3; s?: V3 }[] }) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    items.forEach((it, i) => {
+      q.setFromEuler(new THREE.Euler(...(it.r ?? [0, 0, 0])));
+      m.compose(new THREE.Vector3(...it.p), q, new THREE.Vector3(...(it.s ?? [1, 1, 1])));
+      ref.current!.setMatrixAt(i, m);
+    });
+    ref.current!.instanceMatrix.needsUpdate = true;
+  }, [items]);
+  return <instancedMesh ref={ref} args={[geometry, material, items.length]} castShadow receiveShadow />;
+}
+
+/* ───────────── Géométrie de la maison ───────────── */
+const A = { x0: -4.5, x1: 4.5, z0: -3, z1: 3, h: 3 }; // RDC
+const B = { x0: -1.5, x1: 7.5, z0: -3.5, z1: 2.5, y0: 3, y1: 5.8 }; // étage
+
+/** Parpaings : 4 murs, assises décalées, ouvertures (baie + porte). */
+function useBlocks() {
+  return useMemo(() => {
+    const L = 0.6, H = 0.3, T = 0.3;
+    const out: { p: V3; r?: V3 }[] = [];
+    const opening = (axis: "x" | "z", u: number, y: number) =>
+      (axis === "z" && u > -2.2 && u < 1 && y > 0.5 && y < 2.4) || // baie côté droit
+      (axis === "x" && u > 1.6 && u < 2.8 && y < 2.3); // porte façade avant
+    for (let row = 0; row < A.h / H; row++) {
+      const y = row * H + H / 2;
+      const off = row % 2 ? L / 2 : 0;
+      for (let x = A.x0 + L / 2 - off; x < A.x1; x += L) {
+        if (x < A.x0 + 0.1) continue;
+        if (!opening("x", x, y)) out.push({ p: [x, y, A.z1 - T / 2] });
+        out.push({ p: [x, y, A.z0 + T / 2] });
+      }
+      for (let z = A.z0 + L / 2 + off; z < A.z1; z += L) {
+        if (z > A.z1 - 0.1) continue;
+        if (!opening("z", z, y)) out.push({ p: [A.x1 - T / 2, y, z], r: [0, Math.PI / 2, 0] });
+        out.push({ p: [A.x0 + T / 2, y, z], r: [0, Math.PI / 2, 0] });
+      }
+    }
+    return { geo: new THREE.BoxGeometry(L * 0.96, H * 0.9, T), items: out };
+  }, []);
+}
+
+/* ───────────── Familles ───────────── */
+
+function Concrete() {
+  const { geo, items } = useBlocks();
+  return (
+    <>
+      <Instances geometry={geo} material={mat.block} items={items} />
+      <Block size={[9.6, 0.3, 6.6]} position={[0, -0.15, 0]} material={mat.slab} edges />
+    </>
+  );
+}
+
+function Upper() {
+  // Volume vitré + dalle + menuiseries (structure, reste en place)
+  const mullions = useMemo(() => Array.from({ length: 7 }, (_, i) => B.x0 + 0.6 + i * 1.3), []);
+  return (
+    <group>
+      <Block size={[B.x1 - B.x0 + 0.2, 0.28, B.z1 - B.z0 + 0.2]} position={[(B.x0 + B.x1) / 2, B.y0 + 0.14, (B.z0 + B.z1) / 2]} material={mat.slab} edges />
+      <Block size={[B.x1 - B.x0, B.y1 - B.y0 - 0.28, B.z1 - B.z0]} position={[(B.x0 + B.x1) / 2, (B.y0 + 0.28 + B.y1) / 2, (B.z0 + B.z1) / 2]} material={mat.glass} edges />
+      {mullions.map((x) => <Block key={x} size={[0.06, B.y1 - B.y0 - 0.28, 0.06]} position={[x, (B.y0 + 0.28 + B.y1) / 2, B.z1]} material={mat.frame} />)}
+      <Block size={[0.06, B.y1 - B.y0 - 0.28, 0.06]} position={[B.x1, (B.y0 + 0.28 + B.y1) / 2, B.z1]} material={mat.frame} />
+      {/* Baie + porte du RDC */}
+      <Block size={[0.04, 1.9, 3.2]} position={[A.x1 - 0.12, 1.45, -0.6]} material={mat.glass} edges />
+      <Block size={[1.2, 2.3, 0.06]} position={[2.2, 1.15, A.z1 - 0.1]} material={mat.frame} edges />
+    </group>
+  );
+}
+
+function Roof() {
+  const ribs = useMemo(() => {
+    const items: { p: V3 }[] = [];
+    for (let x = B.x0 - 0.2; x <= B.x1 + 0.2; x += 0.36) items.push({ p: [x, B.y1 + 0.36, (B.z0 + B.z1) / 2] });
+    return { geo: new THREE.BoxGeometry(0.07, 0.08, B.z1 - B.z0 + 0.6), items };
+  }, []);
+  return (
+    <>
+      <Block size={[B.x1 - B.x0 + 0.6, 0.3, B.z1 - B.z0 + 0.6]} position={[(B.x0 + B.x1) / 2, B.y1 + 0.15, (B.z0 + B.z1) / 2]} material={mat.roof} edges />
+      <Instances geometry={ribs.geo} material={mat.roof} items={ribs.items} />
+    </>
+  );
+}
+
+function Rebar() {
+  const data = useMemo(() => {
+    const bar = new THREE.CylinderGeometry(0.045, 0.045, 1, 10);
+    const cx = A.x1 + 0.45, cz = A.z1 + 0.45, s = 0.32;
+    const bars = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => ({ p: [cx + a * s / 2, 1.85, cz + b * s / 2] as V3, s: [1, 3.9, 1] as V3 }));
+    // armatures en attente au sommet du mur avant
+    for (let x = -3.6; x <= 3.6; x += 1.8) bars.push({ p: [x, A.h + 0.35, A.z1 - 0.15], s: [0.8, 0.7, 0.8] });
+    const stirrups: { p: V3; r?: V3; s?: V3 }[] = [];
+    const st = new THREE.BoxGeometry(s + 0.06, 0.025, 0.025);
+    for (let y = 0.15; y < 3.8; y += 0.3) {
+      stirrups.push({ p: [cx, y, cz - s / 2] }, { p: [cx, y, cz + s / 2] });
+      stirrups.push({ p: [cx - s / 2, y, cz], r: [0, Math.PI / 2, 0] }, { p: [cx + s / 2, y, cz], r: [0, Math.PI / 2, 0] });
+    }
+    return { bar, bars, st, stirrups };
+  }, []);
+  return (
+    <>
+      <Instances geometry={data.bar} material={mat.rebar} items={data.bars} />
+      <Instances geometry={data.st} material={mat.rebar} items={data.stirrups} />
+    </>
+  );
+}
+
+/** Profilé en I (HEA) le long de x. */
+function IBeam({ length, position, vertical = false }: { length: number; position: V3; vertical?: boolean }) {
+  const r: V3 = vertical ? [0, 0, Math.PI / 2] : [0, 0, 0];
+  return (
+    <group position={position} rotation={r}>
+      <Block size={[length, 0.04, 0.26]} position={[0, 0.13, 0]} material={mat.steel} />
+      <Block size={[length, 0.04, 0.26]} position={[0, -0.13, 0]} material={mat.steel} />
+      <Block size={[length, 0.24, 0.035]} position={[0, 0, 0]} material={mat.steel} />
+    </group>
+  );
+}
+
+function Steel() {
+  const len = B.x1 - A.x1 + 0.4;
+  const cx = A.x1 + len / 2 - 0.2;
+  return (
+    <>
+      <IBeam length={len} position={[cx, B.y0 - 0.15, B.z0 + 0.25]} />
+      <IBeam length={len} position={[cx, B.y0 - 0.15, B.z1 - 0.25]} />
+      <IBeam length={B.y0 - 0.3} position={[B.x1 - 0.35, (B.y0 - 0.3) / 2, B.z1 - 0.25]} vertical />
+      <IBeam length={B.y0 - 0.3} position={[B.x1 - 0.35, (B.y0 - 0.3) / 2, B.z0 + 0.25]} vertical />
+    </>
+  );
+}
+
+function Tiles() {
+  const items = useMemo(() => {
+    const out: { p: V3 }[] = [];
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) out.push({ p: [-4 + 0.4 + i * 0.82, 0.55 + j * 0.82, A.z1 + 0.04] });
+    return out;
+  }, []);
+  const geo = useMemo(() => new THREE.BoxGeometry(0.76, 0.76, 0.05), []);
+  return <Instances geometry={geo} material={mat.tile} items={items} />;
+}
+
+function Electricity() {
+  const curves = useMemo(() => {
+    const x = A.x1 + 0.03;
+    const pts = (l: V3[]) => new THREE.CatmullRomCurve3(l.map((v) => new THREE.Vector3(...v)), false, "catmullrom", 0.05);
+    return [
+      pts([[x, 1.1, 2.1], [x, 2.6, 2.1], [x, 2.6, -2.4], [x, 0.4, -2.4]]),
+      pts([[x, 2.6, 2.1], [x, 3.4, 2.4], [6.5, 3.4, 2.4], [7.2, 4.2, 2.4]]),
+      pts([[x, 1.6, 2.1], [x, 1.6, 1.2]]),
+    ];
+  }, []);
+  const tubes = useMemo(() => curves.map((c) => new THREE.TubeGeometry(c, 64, 0.03, 6, false)), [curves]);
+  const sparks = useRef<THREE.Mesh[]>([]);
+  useFrame(({ clock }) => {
+    sparks.current.forEach((m, i) => {
+      if (!m) return;
+      const t = (clock.elapsedTime * 0.25 + i * 0.33) % 1;
+      m.position.copy(curves[i % curves.length].getPointAt(t));
+    });
+  });
+  return (
+    <>
+      {tubes.map((g, i) => <mesh key={i} geometry={g} material={mat.wire} />)}
+      {[0, 1, 2].map((i) => (
+        <mesh key={`s${i}`} ref={(m) => { if (m) sparks.current[i] = m; }} material={mat.spark}>
+          <sphereGeometry args={[0.06, 10, 10]} />
+        </mesh>
+      ))}
+      <Block size={[0.08, 0.7, 0.5]} position={[A.x1 + 0.05, 1.2, 2.1]} material={mat.panel} edges />
+    </>
+  );
+}
+
+function Tools() {
+  return (
+    <group position={[-2.2, 0, 4.8]}>
+      {/* Perceuse */}
+      <group position={[0, 0.16, 0]} rotation={[0, 0.6, 0]}>
+        <Block size={[0.5, 0.16, 0.14]} position={[0, 0.2, 0]} material={mat.tool} />
+        <Block size={[0.12, 0.32, 0.12]} position={[-0.12, 0, 0]} material={mat.toolDark} />
+        <mesh position={[0.32, 0.2, 0]} rotation={[0, 0, Math.PI / 2]} material={mat.toolDark}><cylinderGeometry args={[0.03, 0.03, 0.18, 8]} /></mesh>
+      </group>
+      {/* Niveau */}
+      <Block size={[1.2, 0.07, 0.12]} position={[1.1, 0.04, 0.5]} rotation={[0, -0.3, 0]} material={mat.tool} />
+      {/* Marteau */}
+      <group position={[0.3, 0.04, 1.1]} rotation={[0, 1.1, 0]}>
+        <Block size={[0.6, 0.05, 0.05]} position={[0, 0, 0]} material={mat.toolDark} />
+        <Block size={[0.1, 0.08, 0.22]} position={[0.3, 0.02, 0]} material={mat.toolDark} />
+      </group>
+    </group>
+  );
+}
+
+function Vehicle() {
+  // Camion + palette : silhouettes holographiques secondaires (arrière-plan)
+  return (
+    <group position={[6.5, 0, -9.5]} rotation={[0, -0.25, 0]}>
+      <Block size={[4.6, 2.1, 2.1]} position={[0, 1.55, 0]} material={mat.holo} edges />
+      <Block size={[1.5, 1.6, 2.1]} position={[3.15, 1.3, 0]} material={mat.holo} edges />
+      {[-1.4, 1.2, 3.2].map((x) => (
+        <mesh key={x} position={[x, 0.42, 1.08]} rotation={[Math.PI / 2, 0, 0]} material={mat.holo}><cylinderGeometry args={[0.42, 0.42, 0.25, 16]} /></mesh>
+      ))}
+      <group position={[-1, 0, 3.4]}>
+        <Block size={[1.2, 0.14, 1]} position={[0, 0.07, 0]} material={mat.holo} edges />
+        {[[-0.3, -0.22], [0.3, -0.22], [-0.3, 0.22], [0.3, 0.22]].map(([x, z], i) => (
+          <Block key={i} size={[0.56, 0.2, 0.4]} position={[x, 0.25 + (i > 1 ? 0.2 : 0), z]} material={mat.holo} edges />
+        ))}
+      </group>
+    </group>
+  );
+}
+
+/* ───────────── Label holographique (HTML au-dessus du canvas) ───────────── */
+function Label({ part, state }: { part: (typeof LABELS)[number]; state: HeroState }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFrame(() => {
+    if (!ref.current) return;
+    const o = state.labels;
+    ref.current.style.opacity = String(o);
+    ref.current.style.pointerEvents = o > 0.5 ? "auto" : "none";
+    ref.current.dataset.active = state.hover === part.key ? "1" : "0";
+  });
+  return (
+    <Html position={part.at} center zIndexRange={[20, 10]}>
+      <div
+        ref={ref}
+        className="holo3d-label"
+        style={{ opacity: 0 }}
+        onPointerEnter={() => (state.hover = part.key)}
+        onPointerLeave={() => (state.hover = null)}
+      >
+        <i />
+        {part.label}
+      </div>
+    </Html>
+  );
+}
+
+/* ───────────── Assemblage ───────────── */
+const PARTS: { key: PartKey; node: ReactNode }[] = [
+  { key: "concrete", node: <Concrete /> },
+  { key: "tile", node: <Tiles /> },
+  { key: "rebar", node: <Rebar /> },
+  { key: "steel", node: <Steel /> },
+  { key: "electricity", node: <Electricity /> },
+  { key: "roof", node: <Roof /> },
+  { key: "tools", node: <Tools /> },
+];
+
+export function House({ state, mobile }: { state: HeroState; mobile: boolean }) {
+  const groups = useRef<Partial<Record<PartKey, THREE.Group>>>({});
+  const k = mobile ? 0.55 : 1;
+
+  useFrame((_, dt) => {
+    // Position de chaque famille = vecteur de vue éclatée × progression (pilotée par le scroll)
+    (Object.keys(groups.current) as PartKey[]).forEach((key) => {
+      const g = groups.current[key];
+      if (!g) return;
+      const e = state.explode[key] * k;
+      const [x, y, z] = EXPLODE[key];
+      g.position.set(x * e, y * e, z * e);
+    });
+    // Survol d'un label → la famille correspondante s'illumine
+    (Object.keys(PART_MATS) as PartKey[]).forEach((key) => {
+      const target = state.hover === key ? 1 : 0;
+      PART_MATS[key].forEach((m) => {
+        const base = BASE_EMISSIVE.get(m) ?? 0;
+        m.emissiveIntensity = THREE.MathUtils.damp(m.emissiveIntensity, base + target * (key === "electricity" ? 2 : 0.9), 8, dt);
+      });
+    });
+  });
+
+  return (
+    <group position={[-1.5, 0, 0]}>
+      <Upper />
+      {PARTS.filter((p) => !mobile || p.key !== "tools").map((p) => (
+        <group key={p.key} ref={(g) => { if (g) groups.current[p.key] = g; }}>
+          {p.node}
+          {LABELS.filter((l) => l.key === p.key && (!mobile || l.mobile)).map((l) => <Label key={l.key} part={l} state={state} />)}
+        </group>
+      ))}
+      {!mobile && <Vehicle />}
+    </group>
+  );
+}

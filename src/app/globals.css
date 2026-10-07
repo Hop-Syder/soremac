@@ -218,3 +218,16 @@ html.lenis, html.lenis body { height: auto; }
 @media (prefers-reduced-motion: reduce) {
   .holo-house [data-part="structure"], .holo-house .holo-current, .holo-house .holo-particles circle { animation: none; }
 }
+
+/* Labels holographiques de la scène 3D */
+.holo3d-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 12px; border-radius: 8px; white-space: nowrap;
+  font: 600 11.5px/1 var(--font-geist), ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.14em;
+  color: #e0f7ff; background: rgb(8 20 36 / 0.72);
+  border: 1px solid rgb(103 232 249 / 0.7);
+  box-shadow: 0 0 18px rgb(34 211 238 / 0.25);
+  backdrop-filter: blur(6px); transition: opacity .25s, box-shadow .25s, transform .25s; cursor: default; user-select: none;
+}
+.holo3d-label i { width: 6px; height: 6px; border-radius: 99px; background: #67e8f9; box-shadow: 0 0 8px #67e8f9; }
+.holo3d-label[data-active="1"] { box-shadow: 0 0 26px rgb(34 211 238 / 0.6); transform: scale(1.06); }
