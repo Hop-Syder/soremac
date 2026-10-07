@@ -23,7 +23,7 @@ import dynamic from "next/dynamic";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { ArrowRightIcon } from "@phosphor-icons/react/ssr";
+import { ArrowClockwiseIcon, ArrowRightIcon, CaretLeftIcon, CaretRightIcon, CubeFocusIcon, HandGrabbingIcon } from "@phosphor-icons/react/ssr";
 import { ButtonLink } from "@/components/ui/Button";
 import { HouseHologram } from "./hero/HouseHologram";
 import { createHeroState, type PartKey } from "./hero3d/state";
@@ -52,6 +52,43 @@ export function HeroHolo() {
   const [mobile, setMobile] = useState(false);
   const [use3D, setUse3D] = useState(false);
   const [ready, setReady] = useState(false);
+  const [auto, setAuto] = useState(false);
+  const drag = useRef<{ x: number; active: boolean } | null>(null);
+
+  /* ───── Rotation 360° : flèches, rotation auto, glisser (souris / tactile) ───── */
+  const rotate = (dir: 1 | -1) => {
+    state.auto = false;
+    setAuto(false);
+    gsap.to(state, { yaw: state.yaw + dir * (Math.PI / 4), duration: 0.9, ease: "power3.inOut", overwrite: "auto" });
+  };
+  const toggleAuto = () => {
+    gsap.killTweensOf(state, "yaw");
+    state.auto = !state.auto;
+    setAuto(state.auto);
+  };
+  const recenter = () => {
+    state.auto = false;
+    setAuto(false);
+    // retour à l'angle d'origine par le chemin le plus court
+    const turn = Math.PI * 2;
+    const target = Math.round(state.yaw / turn) * turn;
+    gsap.to(state, { yaw: target, duration: 1.1, ease: "power3.inOut", overwrite: "auto" });
+  };
+  const onPointerDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest("a,button")) return;
+    drag.current = { x: e.clientX, active: true };
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    gsap.killTweensOf(state, "yaw");
+    state.auto = false;
+    setAuto(false);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!drag.current?.active) return;
+    const dx = e.clientX - drag.current.x;
+    drag.current.x = e.clientX;
+    state.yaw -= dx * 0.009;
+  };
+  const endDrag = () => { if (drag.current) drag.current.active = false; };
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
@@ -155,7 +192,15 @@ export function HeroHolo() {
       </div>
 
       {/* Zone droite : maquette 3D (SVG en attente / repli) */}
-      <div className={s.sceneWrap}>
+      <div
+        className={s.sceneWrap}
+        onPointerDown={use3D ? onPointerDown : undefined}
+        onPointerMove={use3D ? onPointerMove : undefined}
+        onPointerUp={endDrag}
+        onPointerLeave={endDrag}
+        onPointerCancel={endDrag}
+        style={use3D ? { cursor: "grab", touchAction: "pan-y" } : undefined}
+      >
         <div data-hero="stage" className="hero-init absolute inset-0">
           <div className={s.halo} aria-hidden />
           <div className={s.poster} style={{ opacity: use3D && ready ? 0 : 1 }}>
@@ -167,6 +212,30 @@ export function HeroHolo() {
             </div>
           )}
         </div>
+
+        {use3D && ready && (
+          <>
+            {/* Badge : la maquette est un outil de présentation, pas une image */}
+            <div className={s.badge}>
+              <CubeFocusIcon size={16} weight="duotone" />
+              <span>Maquette 3D interactive</span>
+              <em>Les matériaux SOREMAC, assemblés comme sur votre chantier</em>
+            </div>
+
+            {/* Contrôles 360° */}
+            <div className={s.controls}>
+              <div className="holo360" role="group" aria-label="Rotation de la maquette">
+                <button onClick={() => rotate(-1)} aria-label="Tourner vers la gauche" className="max-lg:hidden"><CaretLeftIcon size={16} weight="bold" /></button>
+                <button onClick={toggleAuto} aria-pressed={auto} aria-label={auto ? "Arrêter la rotation 360°" : "Lancer la rotation 360°"}>
+                  <ArrowClockwiseIcon size={15} weight="bold" className={auto ? "animate-spin [animation-duration:3s]" : ""} /> 360°
+                </button>
+                <button onClick={() => rotate(1)} aria-label="Tourner vers la droite" className="max-lg:hidden"><CaretRightIcon size={16} weight="bold" /></button>
+                <button onClick={recenter} aria-label="Revenir à la vue de face" className="max-lg:hidden">Face</button>
+              </div>
+              <p className={s.dragHint}><HandGrabbingIcon size={15} /> Glissez pour tourner</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Contenu (textes identiques) */}
