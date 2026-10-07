@@ -62,7 +62,7 @@ function Ambient({ state }: { state: HeroState }) {
   return <pointLight ref={light} position={[2, 7, 4]} color="#67e8f9" distance={30} decay={1.6} />;
 }
 
-export default function Scene({ state, mobile, onReady }: { state: HeroState; mobile: boolean; onReady?: () => void }) {
+export default function Scene({ state, mobile, still = false, onReady }: { state: HeroState; mobile: boolean; still?: boolean; onReady?: () => void }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
 
@@ -76,7 +76,8 @@ export default function Scene({ state, mobile, onReady }: { state: HeroState; mo
   return (
     <div ref={wrap} className="absolute inset-0">
       <Canvas
-        frameloop={visible ? "always" : "never"}
+        // Animations désactivées : rendu à la demande (image fixe)
+        frameloop={still ? "demand" : visible ? "always" : "never"}
         dpr={mobile ? [1, 1.25] : [1, 1.75]}
         shadows={!mobile}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
