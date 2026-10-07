@@ -1,0 +1,304 @@
+/**
+ * Produits prioritaires du MVP (TDR §48).
+ *
+ * Règle d'or (TDR §6, règle 7) : seules les données confirmées par le dossier SOREMAC
+ * figurent ici. Aucun prix, stock, norme ou certification n'est inventé : l'interface
+ * affiche « Prix sur demande » / « Vérifier la disponibilité » à la place.
+ * @hopsyder
+ */
+import type { Product } from "./types";
+
+const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?w=${w}&q=80&auto=format&fit=crop`;
+
+export const products: Product[] = [
+  {
+    slug: "fer-a-beton",
+    name: "Fer à béton",
+    category: "acier-fer",
+    subcategory: "Fer à béton",
+    summary: "Barres d'acier pour béton armé, disponibles en grades Fe400 et Fe500, du Ø 6 au Ø 32 mm.",
+    presentation:
+      "Le fer à béton constitue l'ossature de toute structure en béton armé. SOREMAC propose les grades Fe400 et Fe500 dans une large gamme de diamètres pour couvrir l'ensemble des besoins du chantier, du ferraillage léger aux éléments les plus sollicités.",
+    usage: "Fondations, poteaux, poutres, dalles, chaînages et escaliers.",
+    advice:
+      "Le choix du grade et du diamètre dépend du calcul de structure. En cas de doute, transmettez vos plans à notre équipe : nous vous orientons vers les bonnes références.",
+    gallery: [
+      { src: u("photo-1504307651254-35680f356dfd"), alt: "Barres de fer à béton stockées sur chantier", role: "main" },
+      { src: u("photo-1541888946425-d81bb19240f5"), alt: "Ferraillage d'une structure en béton armé", role: "site" },
+      { src: u("photo-1518709766631-a6a7f45921c3"), alt: "Détail de barres d'acier", role: "detail" },
+      { src: u("photo-1503387762-592deb58ef4e"), alt: "Chantier de construction en cours", role: "usage" },
+    ],
+    specs: { Type: "Fer à béton", Grades: "Fe400 · Fe500", Diamètres: "6 à 32 mm", Usage: "Béton armé" },
+    variants: [
+      { key: "grade", label: "Grade", options: ["Fe400", "Fe500"] },
+      { key: "diametre", label: "Diamètre", unit: "mm", options: ["6", "8", "10", "12", "14", "16", "20", "25", "32"] },
+    ],
+    unit: "barre(s)",
+    badge: "Plus demandé",
+    featured: true,
+    popular: true,
+    related: ["fil-d-attache", "betonniere-410-litres", "ciment-cimbenin", "parpaing"],
+    keywords: ["fer", "acier", "ha", "barre", "ferraillage", "fe 400", "fe 500"],
+    seoTitle: "Fer à béton Fe400 & Fe500 (Ø 6 à 32 mm) à Cotonou",
+    seoDescription:
+      "Fer à béton Fe400 et Fe500 du Ø 6 au Ø 32 mm chez SOREMAC à Cotonou. Vente détail & gros, devis gratuit, réponse rapide sur WhatsApp.",
+    status: "published",
+  },
+  {
+    slug: "ciment-cimbenin",
+    name: "Ciment CIMBENIN",
+    category: "cimenterie-liants",
+    subcategory: "Ciment",
+    brand: "CIMBENIN",
+    summary: "Ciment pour vos bétons, mortiers et enduits. Vente au sac et en gros.",
+    presentation:
+      "Base de tout chantier, le ciment est disponible chez SOREMAC à l'unité comme en grande quantité pour les entreprises et promoteurs. Contactez-nous pour connaître les références et conditionnements disponibles.",
+    usage: "Béton, mortier de pose, enduits, chapes.",
+    gallery: [
+      { src: u("photo-1590725121839-892b45745d42"), alt: "Sacs de ciment sur palette", role: "main" },
+      { src: u("photo-1503387762-592deb58ef4e"), alt: "Coulage de béton sur chantier", role: "usage" },
+    ],
+    specs: { Marque: "CIMBENIN", Type: "Ciment" },
+    variants: [],
+    unit: "sac(s)",
+    featured: true,
+    popular: true,
+    related: ["sikalatex", "sikalite", "fer-a-beton", "betonniere-410-litres"],
+    keywords: ["ciment", "cimbenin", "liant", "sac", "beton"],
+    seoTitle: "Ciment CIMBENIN à Cotonou — vente détail & gros",
+    status: "published",
+  },
+  {
+    slug: "sikalatex",
+    name: "Sikalatex",
+    category: "cimenterie-liants",
+    subcategory: "Adjuvants",
+    brand: "Sika",
+    summary: "Résine d'accrochage et d'amélioration pour mortiers, disponible en 2, 5 et 20 litres.",
+    presentation:
+      "Sikalatex est une référence Sika utilisée pour améliorer les mortiers et les reprises. SOREMAC garantit l'originalité des produits Sika distribués.",
+    gallery: [
+      { src: u("photo-1558618666-fcd25c85f82e"), alt: "Bidons de produit de construction", role: "main" },
+      { src: u("photo-1572981779307-38b8cabb2407"), alt: "Application d'un mortier", role: "usage" },
+    ],
+    specs: { Marque: "Sika", Conditionnements: "2 L · 5 L · 20 L" },
+    variants: [{ key: "conditionnement", label: "Conditionnement", options: ["02 L", "05 L", "20 L"] }],
+    unit: "bidon(s)",
+    badge: "Sika original",
+    authenticity: "Originalité des produits Sika garantie par SOREMAC.",
+    featured: true,
+    popular: true,
+    related: ["sikalite", "ciment-cimbenin", "carrelage"],
+    keywords: ["sika", "latex", "sikalatex", "adjuvant", "20 litres", "20l"],
+    seoTitle: "Sikalatex 2 L, 5 L, 20 L à Cotonou — Sika original",
+    status: "published",
+  },
+  {
+    slug: "sikalite",
+    name: "Sikalite",
+    category: "cimenterie-liants",
+    subcategory: "Adjuvants",
+    brand: "Sika",
+    summary: "Adjuvant Sika pour mortiers et bétons, en conditionnement 1 kg ou 25 kg.",
+    presentation:
+      "Sikalite fait partie des références Sika distribuées par SOREMAC. Notre équipe vous conseille sur son utilisation selon votre ouvrage.",
+    gallery: [{ src: u("photo-1503387762-592deb58ef4e"), alt: "Travaux de maçonnerie", role: "main" }],
+    specs: { Marque: "Sika", Conditionnements: "1 kg · 25 kg" },
+    variants: [{ key: "conditionnement", label: "Conditionnement", options: ["01 kg", "25 kg"] }],
+    unit: "unité(s)",
+    badge: "Sika original",
+    authenticity: "Originalité des produits Sika garantie par SOREMAC.",
+    featured: true,
+    related: ["sikalatex", "ciment-cimbenin"],
+    keywords: ["sika", "sikalite", "adjuvant"],
+    status: "published",
+  },
+  {
+    slug: "toiturol",
+    name: "TOITUROL",
+    category: "toiture-couverture",
+    subcategory: "Protection de toiture",
+    brand: "TOITUROL",
+    summary: "Produit de traitement pour toitures. Exigez l'authenticité du produit.",
+    presentation:
+      "TOITUROL est une référence recherchée pour l'entretien des toitures. Face aux contrefaçons, SOREMAC recommande d'exiger l'authenticité du produit au moment de l'achat.",
+    gallery: [
+      { src: u("photo-1632759145354-ed692484c06a"), alt: "Toiture métallique", role: "main" },
+      { src: u("photo-1564013799919-ab600027ffc6"), alt: "Maison avec toiture neuve", role: "usage" },
+    ],
+    specs: { Marque: "TOITUROL" },
+    variants: [],
+    unit: "unité(s)",
+    badge: "Authenticité",
+    authenticity: "Exigez l'authenticité du produit TOITUROL.",
+    featured: true,
+    popular: true,
+    related: ["tole-de-couverture", "peinture"],
+    keywords: ["toiturol", "toiture", "toit"],
+    status: "published",
+  },
+  {
+    slug: "tole-de-couverture",
+    name: "Tôles de couverture",
+    category: "toiture-couverture",
+    subcategory: "Tôles",
+    summary: "Tôles pour toitures résidentielles et commerciales, dont tôles couleur.",
+    presentation:
+      "SOREMAC distribue des tôles pour vos couvertures. Indiquez-nous le type, la couleur et les longueurs souhaitées : nous confirmons la disponibilité et établissons votre devis.",
+    usage: "Couverture de bâtiments résidentiels, commerciaux et d'entrepôts.",
+    gallery: [
+      { src: u("photo-1564013799919-ab600027ffc6"), alt: "Maison couverte de tôles", role: "main" },
+      { src: u("photo-1632759145354-ed692484c06a"), alt: "Détail de toiture métallique", role: "detail" },
+    ],
+    specs: { Type: "Tôle de couverture" },
+    variants: [],
+    unit: "tôle(s)",
+    featured: true,
+    popular: true,
+    related: ["toiturol", "fer-a-beton"],
+    keywords: ["tole", "tôle", "couleur", "toiture", "bac", "couverture"],
+    status: "published",
+  },
+  {
+    slug: "carrelage",
+    name: "Carrelage sol & mur",
+    category: "carrelage-revetements",
+    subcategory: "Carreaux",
+    summary: "Carreaux pour sols et murs, intérieurs comme extérieurs.",
+    presentation:
+      "Une large sélection de carreaux pour vos pièces de vie, salles de bain et extérieurs. Formats, finitions et coloris disponibles à vérifier auprès de notre équipe.",
+    usage: "Séjours, chambres, cuisines, salles de bain, terrasses.",
+    gallery: [
+      { src: u("photo-1615529182904-14819c35db37"), alt: "Sol carrelé dans un intérieur contemporain", role: "main" },
+      { src: u("photo-1600607687939-ce8a6c25118c"), alt: "Pièce de vie avec carrelage clair", role: "usage" },
+      { src: u("photo-1552321554-5fefe8c9ef14"), alt: "Salle de bain carrelée", role: "usage" },
+    ],
+    specs: { Usage: "Sol & mur" },
+    variants: [],
+    unit: "carton(s)",
+    featured: true,
+    popular: true,
+    related: ["sikalatex", "lavabo", "wc"],
+    keywords: ["carrelage", "carreau", "carreaux", "faience", "gres"],
+    seoTitle: "Carrelage à Cotonou — sol & mur | SOREMAC",
+    status: "published",
+  },
+  {
+    slug: "parpaing",
+    name: "Parpaings",
+    category: "maconnerie",
+    subcategory: "Blocs",
+    summary: "Blocs pour murs porteurs, cloisons et clôtures.",
+    presentation: "Parpaings pour l'élévation de vos murs. Dimensions disponibles sur demande.",
+    usage: "Murs porteurs, cloisons, murs de clôture.",
+    gallery: [{ src: u("photo-1590725140246-20acdee442be"), alt: "Mur en blocs de béton", role: "main" }],
+    specs: { Type: "Bloc" },
+    variants: [],
+    unit: "unité(s)",
+    popular: true,
+    related: ["hourdis", "ciment-cimbenin", "fer-a-beton"],
+    keywords: ["parpaing", "agglo", "bloc", "brique"],
+    status: "published",
+  },
+  {
+    slug: "hourdis",
+    name: "Hourdis",
+    category: "maconnerie",
+    subcategory: "Planchers",
+    summary: "Entrevous pour planchers à poutrelles.",
+    presentation: "Hourdis pour la réalisation de vos planchers. Dimensions disponibles sur demande.",
+    usage: "Planchers et dalles à poutrelles.",
+    gallery: [{ src: u("photo-1541888946425-d81bb19240f5"), alt: "Chantier de plancher", role: "main" }],
+    specs: { Type: "Hourdis" },
+    variants: [],
+    unit: "unité(s)",
+    related: ["parpaing", "fer-a-beton", "ciment-cimbenin"],
+    keywords: ["hourdis", "entrevous", "plancher", "dalle"],
+    status: "published",
+  },
+  {
+    slug: "lavabo",
+    name: "Lavabo",
+    category: "sanitaire",
+    subcategory: "Lavabos",
+    summary: "Lavabos pour salles de bain résidentielles et professionnelles.",
+    presentation: "Sélection de lavabos. Modèles et finitions disponibles à confirmer avec notre équipe.",
+    gallery: [
+      { src: u("photo-1584622650111-993a426fbf0a"), alt: "Lavabo dans une salle de bain moderne", role: "main" },
+      { src: u("photo-1552321554-5fefe8c9ef14"), alt: "Salle de bain équipée", role: "usage" },
+    ],
+    specs: { Type: "Lavabo" },
+    variants: [],
+    unit: "unité(s)",
+    featured: true,
+    related: ["wc", "carrelage"],
+    keywords: ["lavabo", "vasque", "salle de bain"],
+    status: "published",
+  },
+  {
+    slug: "wc",
+    name: "WC",
+    category: "sanitaire",
+    subcategory: "WC",
+    summary: "Cuvettes et ensembles WC.",
+    presentation: "Ensembles WC pour vos salles d'eau. Modèles disponibles sur demande.",
+    gallery: [{ src: u("photo-1552321554-5fefe8c9ef14"), alt: "Salle de bain avec WC", role: "main" }],
+    specs: { Type: "WC" },
+    variants: [],
+    unit: "unité(s)",
+    related: ["lavabo", "carrelage"],
+    keywords: ["wc", "toilette", "cuvette"],
+    status: "published",
+  },
+  {
+    slug: "betonniere-410-litres",
+    name: "Bétonnière 410 litres",
+    category: "equipements-chantier",
+    subcategory: "Bétonnières",
+    summary: "Bétonnière d'une capacité de 410 litres pour vos chantiers.",
+    presentation:
+      "Une bétonnière de 410 litres pour préparer béton et mortier sur chantier. Contactez-nous pour les détails techniques et la disponibilité.",
+    usage: "Préparation de béton et mortier sur chantier.",
+    gallery: [{ src: u("photo-1581094288338-2314dddb7ece"), alt: "Équipement de chantier", role: "main" }],
+    specs: { Capacité: "410 litres", Type: "Bétonnière" },
+    variants: [],
+    unit: "unité(s)",
+    badge: "Équipement",
+    featured: true,
+    related: ["ciment-cimbenin", "fer-a-beton", "parpaing"],
+    keywords: ["betonniere", "bétonnière", "malaxeur", "410"],
+    status: "published",
+  },
+  {
+    slug: "fil-d-attache",
+    name: "Fil d'attache",
+    category: "quincaillerie-outillage",
+    subcategory: "Ferraillage",
+    summary: "Fil pour la ligature des armatures.",
+    presentation: "Fil d'attache pour assembler vos armatures de béton armé.",
+    gallery: [{ src: u("photo-1518709766631-a6a7f45921c3"), alt: "Armatures ligaturées", role: "main" }],
+    specs: { Usage: "Ligature d'armatures" },
+    variants: [],
+    unit: "unité(s)",
+    related: ["fer-a-beton"],
+    keywords: ["fil", "attache", "ligature", "recuit"],
+    status: "published",
+  },
+];
+
+export const published = products.filter((p) => p.status === "published");
+
+export const getProduct = (slug: string) => published.find((p) => p.slug === slug);
+export const getProductsByCategory = (cat: string) => published.filter((p) => p.category === cat);
+export const getFeatured = () => published.filter((p) => p.featured);
+
+/** Produits associés : liste éditoriale d'abord, puis complétée par la catégorie. */
+export function getRelated(product: Product, limit = 4): Product[] {
+  const explicit = (product.related ?? []).map(getProduct).filter((p): p is Product => !!p);
+  const fill = published.filter(
+    (p) => p.slug !== product.slug && p.category === product.category && !explicit.includes(p),
+  );
+  return [...explicit, ...fill].slice(0, limit);
+}
+
+export const productUrl = (p: Pick<Product, "category" | "slug">) => `/produits/${p.category}/${p.slug}`;
