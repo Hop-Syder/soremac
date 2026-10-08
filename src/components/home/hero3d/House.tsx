@@ -61,6 +61,9 @@ const mat = {
   render: new THREE.MeshPhysicalMaterial({ color: "#eceae6", roughness: 0.88, metalness: 0, clearcoat: 0.05, emissive: "#0e7490", emissiveIntensity: 0.02 }),
   alu: new THREE.MeshStandardMaterial({ color: "#2b3138", roughness: 0.38, metalness: 0.7 }),
   slat: new THREE.MeshStandardMaterial({ color: "#d9a273", map: woodTex, roughness: 0.62, metalness: 0 }),
+  renderGrey: new THREE.MeshPhysicalMaterial({ color: "#b9c0c8", map: concreteTex, roughness: 0.86, metalness: 0, emissive: "#0e7490", emissiveIntensity: 0.03 }),
+  plinth: new THREE.MeshStandardMaterial({ color: "#4b545f", roughness: 0.8, metalness: 0.1 }),
+  gravel: new THREE.MeshStandardMaterial({ color: "#8a8f96", map: concreteTex, roughness: 1 }),
   warm: new THREE.MeshStandardMaterial({ color: "#ffd9a8", emissive: "#ffb066", emissiveIntensity: 2.2, toneMapped: false }),
   interior: new THREE.MeshStandardMaterial({ color: "#3a3129", emissive: "#ffb27a", emissiveIntensity: 0.12, roughness: 0.9 }),
   leaf: new THREE.MeshStandardMaterial({ color: "#3f6b4f", roughness: 0.9, flatShading: true, emissive: "#0f766e", emissiveIntensity: 0.08 }),
@@ -159,13 +162,68 @@ function useBlocks() {
 
 /* ───────────── Familles ───────────── */
 
+/** Enduit de façade du RDC : panneaux autour des ouvertures (porte avant, baie latérale). */
+function GroundRender() {
+  const t = 0.04, o = 0.02; // épaisseur, débord
+  const zf = A.z1 + o, zb = A.z0 - o, xr = A.x1 + o, xl = A.x0 - o, H = A.h;
+  return (
+    <group>
+      {/* Façade avant (porte x 1.6 → 2.8) */}
+      <Block size={[1.6 - A.x0, H, t]} position={[(A.x0 + 1.6) / 2, H / 2, zf]} material={mat.renderGrey} />
+      <Block size={[A.x1 - 2.8, H, t]} position={[(2.8 + A.x1) / 2, H / 2, zf]} material={mat.renderGrey} />
+      <Block size={[1.2, H - 2.3, t]} position={[2.2, 2.3 + (H - 2.3) / 2, zf]} material={mat.renderGrey} />
+      {/* Façade arrière + pignon gauche */}
+      <Block size={[A.x1 - A.x0 + 2 * o, H, t]} position={[0, H / 2, zb]} material={mat.renderGrey} />
+      <Block size={[t, H, A.z1 - A.z0]} position={[xl, H / 2, 0]} material={mat.renderGrey} />
+      {/* Façade droite (baie z -2.2 → 1, y 0.5 → 2.4) */}
+      <Block size={[t, H, -2.2 - A.z0]} position={[xr, H / 2, (A.z0 - 2.2) / 2]} material={mat.renderGrey} />
+      <Block size={[t, H, A.z1 - 1]} position={[xr, H / 2, (1 + A.z1) / 2]} material={mat.renderGrey} />
+      <Block size={[t, H - 2.4, 3.2]} position={[xr, 2.4 + (H - 2.4) / 2, -0.6]} material={mat.renderGrey} />
+      <Block size={[t, 0.5, 3.2]} position={[xr, 0.25, -0.6]} material={mat.renderGrey} />
+      {/* Soubassement anthracite tout autour */}
+      <Block size={[A.x1 - A.x0 + 0.12, 0.28, t]} position={[0, 0.14, zf + 0.02]} material={mat.plinth} />
+      <Block size={[A.x1 - A.x0 + 0.12, 0.28, t]} position={[0, 0.14, zb - 0.02]} material={mat.plinth} />
+      <Block size={[t, 0.28, A.z1 - A.z0 + 0.12]} position={[xr + 0.02, 0.14, 0]} material={mat.plinth} />
+      <Block size={[t, 0.28, A.z1 - A.z0 + 0.12]} position={[xl - 0.02, 0.14, 0]} material={mat.plinth} />
+      {/* Appui de baie + linteau de porte */}
+      <Block size={[0.22, 0.06, 3.4]} position={[xr + 0.08, 0.5, -0.6]} material={mat.alu} />
+      <Block size={[1.4, 0.1, 0.12]} position={[2.2, 2.36, zf + 0.04]} material={mat.alu} />
+    </group>
+  );
+}
+
 function Concrete() {
   const { geo, items } = useBlocks();
   return (
     <>
       <Instances geometry={geo} material={mat.block} items={items} vary={0.18} />
+      <GroundRender />
       <Block size={[9.6, 0.3, 6.6]} position={[0, -0.15, 0]} material={mat.slab} edges />
     </>
+  );
+}
+
+/** Toit-terrasse sur la partie du RDC non couverte par l'étage (x -4.5 → -1.5). */
+function GroundRoof() {
+  const x0 = A.x0 - 0.06, x1 = B.x0, z0 = A.z0 - 0.06, z1 = A.z1 + 0.06;
+  const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2;
+  return (
+    <group>
+      <Block size={[w, 0.28, d]} position={[cx, A.h + 0.14, 0]} material={mat.slab} edges />
+      <Block size={[w - 0.3, 0.05, d - 0.3]} position={[cx + 0.02, A.h + 0.31, 0]} material={mat.gravel} />
+      {/* Acrotère (chaperon alu) */}
+      <Block size={[w, 0.4, 0.14]} position={[cx, A.h + 0.48, z1 - 0.07]} material={mat.renderGrey} />
+      <Block size={[w, 0.4, 0.14]} position={[cx, A.h + 0.48, z0 + 0.07]} material={mat.renderGrey} />
+      <Block size={[0.14, 0.4, d]} position={[x0 + 0.07, A.h + 0.48, 0]} material={mat.renderGrey} />
+      <Block size={[w + 0.04, 0.04, 0.2]} position={[cx, A.h + 0.7, z1 - 0.07]} material={mat.alu} />
+      <Block size={[w + 0.04, 0.04, 0.2]} position={[cx, A.h + 0.7, z0 + 0.07]} material={mat.alu} />
+      <Block size={[0.2, 0.04, d + 0.04]} position={[x0 + 0.07, A.h + 0.7, 0]} material={mat.alu} />
+      {/* Puits de lumière */}
+      <Block size={[1, 0.22, 1.4]} position={[cx - 0.1, A.h + 0.42, -0.6]} material={mat.alu} />
+      <Block size={[0.9, 0.04, 1.3]} position={[cx - 0.1, A.h + 0.55, -0.6]} material={mat.glass} edges />
+      {/* Bacs végétalisés */}
+      {[1.2, 2.1].map((z) => <mesh key={z} position={[cx + 0.3, A.h + 0.5, z]} material={mat.leaf} castShadow><icosahedronGeometry args={[0.28, 0]} /></mesh>)}
+    </group>
   );
 }
 
@@ -230,7 +288,7 @@ function Upper() {
       <Block size={[3.4, 0.04, 2.2]} position={[A.x1 - 1.9, 0.04, -0.6]} material={mat.interior} />
       <pointLight position={[3, 4.6, -0.5]} color="#ffb066" intensity={14} distance={9} decay={1.8} />
       {/* Appliques murales */}
-      {[1.3, 3.1].map((x) => <Block key={x} size={[0.16, 0.26, 0.08]} position={[x, 2.15, A.z1 + 0.05]} material={mat.warm} />)}
+      {[1.3, 3.1].map((x) => <Block key={x} size={[0.16, 0.26, 0.08]} position={[x, 2.15, A.z1 + 0.08]} material={mat.warm} />)}
       {/* Gouttière + descente */}
       <mesh position={[(B.x0 + B.x1) / 2, B.y1 + 0.02, B.z1 + 0.32]} rotation={[0, 0, Math.PI / 2]} material={mat.alu}><cylinderGeometry args={[0.07, 0.07, B.x1 - B.x0 + 0.6, 12]} /></mesh>
       <mesh position={[B.x1 + 0.2, B.y1 / 2, B.z1 + 0.32]} material={mat.alu}><cylinderGeometry args={[0.05, 0.05, B.y1, 10]} /></mesh>
@@ -343,7 +401,7 @@ function Steel() {
 function Tiles() {
   const items = useMemo(() => {
     const out: { p: V3 }[] = [];
-    for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) out.push({ p: [-4 + 0.4 + i * 0.82, 0.55 + j * 0.82, A.z1 + 0.04] });
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) out.push({ p: [-4 + 0.4 + i * 0.82, 0.55 + j * 0.82, A.z1 + 0.08] });
     return out;
   }, []);
   const geo = useMemo(() => new THREE.BoxGeometry(0.76, 0.76, 0.05), []);
@@ -352,7 +410,7 @@ function Tiles() {
 
 function Electricity() {
   const curves = useMemo(() => {
-    const x = A.x1 + 0.03;
+    const x = A.x1 + 0.08;
     const pts = (l: V3[]) => new THREE.CatmullRomCurve3(l.map((v) => new THREE.Vector3(...v)), false, "catmullrom", 0.05);
     return [
       pts([[x, 1.1, 2.1], [x, 2.6, 2.1], [x, 2.6, -2.4], [x, 0.4, -2.4]]),
@@ -377,7 +435,7 @@ function Electricity() {
           <sphereGeometry args={[0.06, 10, 10]} />
         </mesh>
       ))}
-      <Block size={[0.08, 0.7, 0.5]} position={[A.x1 + 0.05, 1.2, 2.1]} material={mat.panel} edges />
+      <Block size={[0.08, 0.7, 0.5]} position={[A.x1 + 0.09, 1.2, 2.1]} material={mat.panel} edges />
     </>
   );
 }
@@ -627,6 +685,7 @@ export function House({ state, mobile }: { state: HeroState; mobile: boolean }) 
   return (
     <group position={[-1.5, 0, 0]}>
       <Upper />
+      <GroundRoof />
       <Landscape />
       <Supplies />
       {PARTS.filter((p) => !mobile || p.key !== "tools").map((p) => (
