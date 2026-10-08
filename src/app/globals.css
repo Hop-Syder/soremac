@@ -146,3 +146,47 @@ html.lenis, html.lenis body { height: auto; }
 .holo360 button:hover { background: rgb(103 232 249 / .14); }
 .holo360 button[aria-pressed="true"] { background: #67e8f9; color: #06202b; }
 @media (max-width: 1023px) { .holo360 button[data-desktop] { display: none; } }
+
+/* ── Footer cinématique (rideau) — @hopsyder ───────────────────────── */
+.footer-curtain { position: relative; background: var(--color-ink); }
+/* Rideau seulement quand l'écran est assez haut pour tout montrer */
+@media (min-width: 1024px) and (min-height: 820px) {
+  .footer-curtain { height: 100svh; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  .footer-stage { position: fixed; inset: auto 0 0 0; height: 100svh; }
+  #contenu { position: relative; z-index: 10; background: var(--color-paper); border-radius: 0 0 2.5rem 2.5rem; box-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.55); overflow: clip; }
+  .footer-stage > div { height: 100%; }
+}
+.footer-aurora {
+  position: absolute; left: 50%; top: 38%; width: min(1100px, 120vw); aspect-ratio: 1.6;
+  translate: -50% -50%; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgb(242 112 29 / 0.28) 0%, rgb(242 112 29 / 0.08) 38%, transparent 68%);
+  filter: blur(20px); animation: footer-breathe 8s ease-in-out infinite;
+}
+.footer-grid {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
+  background-image: linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 70%);
+}
+.footer-giant {
+  position: absolute; left: 50%; bottom: -0.18em; translate: -50% 0; margin: 0; pointer-events: none; user-select: none;
+  font-size: 22vw; font-weight: 800; line-height: 1; letter-spacing: -0.05em; white-space: nowrap;
+  color: transparent; -webkit-text-stroke: 1px rgb(255 255 255 / 0.07);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 75%); -webkit-background-clip: text; background-clip: text;
+  transform-origin: 50% 100%;
+}
+.footer-title { text-shadow: 0 0 60px rgb(242 112 29 / 0.25); }
+.footer-cta-primary {
+  background: linear-gradient(145deg, #ff8a3d 0%, var(--color-accent) 55%, #d65a0e 100%);
+  box-shadow: 0 18px 40px -12px rgb(242 112 29 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+.footer-ribbon {
+  rotate: -2deg; margin-inline: -2vw; padding-block: 14px; overflow: hidden;
+  border-block: 1px solid rgb(255 255 255 / 0.1); background: rgb(255 255 255 / 0.04); backdrop-filter: blur(12px);
+}
+.footer-ribbon-track { display: flex; width: max-content; animation: footer-marquee 38s linear infinite; }
+.footer-ribbon:hover .footer-ribbon-track { animation-play-state: paused; }
+@keyframes footer-marquee { to { transform: translateX(-50%); } }
+@keyframes footer-breathe { 0%, 100% { opacity: 0.75; scale: 1; } 50% { opacity: 1; scale: 1.08; } }
+@media (max-height: 900px) and (min-width: 1024px) { .footer-sub { display: none; } }
+@media (prefers-reduced-motion: reduce) { .footer-aurora, .footer-ribbon-track { animation: none; } }
