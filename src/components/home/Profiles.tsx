@@ -24,8 +24,7 @@ export function Profiles() {
         <StaggerItem key={p.title} dir="left">
           <Link href={p.href} className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-white shadow-[var(--shadow-card)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
             <div className="relative aspect-[16/10] overflow-hidden bg-paper-2">
-              <Image src={p.img} alt="" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
-              <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold backdrop-blur">{p.tag}</span>
+              <div data-m="curtain" className="absolute inset-0"><Image src={p.img} alt="" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" /></div>
             </div>
             <div className="flex flex-1 flex-col p-6 md:p-7">
               <h3 className="t-h3">{p.title}</h3>

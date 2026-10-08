@@ -38,8 +38,7 @@ export function CtaBand({
           <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full bg-accent/25 blur-[100px]" />
           <div className="relative grid gap-12 lg:grid-cols-[1.25fr_1fr] lg:items-center">
             <div>
-              <p className="eyebrow eyebrow-dark">Devis gratuit · réponse rapide</p>
-              <h2 className="mt-5 font-display text-[clamp(2.2rem,4.8vw,4rem)] font-bold leading-[1.02] tracking-[-0.04em]">{title}</h2>
+              <h2 className="font-display text-[clamp(2.2rem,4.8vw,4rem)] font-bold leading-[1.02] tracking-[-0.04em]">{title}</h2>
               <p className="mt-5 max-w-xl text-lg text-white/65">{text}</p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <ButtonLink href="/devis" size="lg">
@@ -50,10 +49,11 @@ export function CtaBand({
                 </ButtonLink>
               </div>
             </div>
-            <ol className="grid gap-3">
+            <ol data-m="steps" className="relative grid gap-3">
+              <span data-line aria-hidden className="absolute bottom-[4.5rem] left-[2.25rem] top-9 w-px origin-top bg-accent/60" />
               {steps.map((s, i) => (
-                <li key={s} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                  <span className="tabular grid size-10 shrink-0 place-items-center rounded-full bg-white/10 font-display font-bold text-accent">{i + 1}</span>
+                <li key={s} data-step className="relative flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                  <span data-dot className="tabular grid size-10 shrink-0 place-items-center rounded-full bg-white/10 font-display font-bold text-accent">{i + 1}</span>
                   <span className="text-[15px] text-white/85">{s}</span>
                 </li>
               ))}

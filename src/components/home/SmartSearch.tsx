@@ -26,8 +26,7 @@ export function SmartSearch({ products }: { products: Product[] }) {
   return (
     <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
       <Reveal>
-        <p className="eyebrow">Recherche intelligente</p>
-        <h2 className="t-h2 mt-4">Trouvez la bonne référence. Comme vous la demanderiez au comptoir.</h2>
+        <h2 className="t-h2">Trouvez la bonne référence. Comme vous la demanderiez au comptoir.</h2>
         <p className="t-lead mt-5">
           Tapez un produit, une marque ou une dimension : la recherche comprend « Fer 12 » et vous amène directement au bon diamètre.
         </p>

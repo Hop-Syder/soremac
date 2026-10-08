@@ -4,7 +4,7 @@
  * @hopsyder
  */
 import type { ReactNode } from "react";
-import { Reveal } from "@/components/motion/Reveal";
+import { SplitWords } from "@/components/motion/HomeMotion";
 import { cn } from "@/lib/cn";
 
 export function SectionHeader({
@@ -25,7 +25,7 @@ export function SectionHeader({
   className?: string;
 }) {
   return (
-    <Reveal
+    <div
       className={cn(
         "mb-10 flex flex-col gap-6 md:mb-14",
         align === "center" ? "items-center text-center" : "md:flex-row md:items-end md:justify-between",
@@ -34,10 +34,10 @@ export function SectionHeader({
     >
       <div className={cn("max-w-3xl", align === "center" && "mx-auto")}>
         {eyebrow && <p className={cn("eyebrow", tone === "dark" && "eyebrow-dark")}>{eyebrow}</p>}
-        <h2 className={cn("t-h2 mt-4", tone === "dark" && "text-white")}>{title}</h2>
-        {intro && <p className={cn("t-lead mt-4 max-w-2xl", tone === "dark" && "text-white/65", align === "center" && "mx-auto")}>{intro}</p>}
+        <h2 data-m="words" className={cn("t-h2", eyebrow && "mt-4", tone === "dark" && "text-white")}>{typeof title === "string" ? <SplitWords text={title} /> : title}</h2>
+        {intro && <p data-m="fade" className={cn("t-lead mt-4 max-w-2xl", tone === "dark" && "text-white/65", align === "center" && "mx-auto")}>{intro}</p>}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
-    </Reveal>
+      {action && <div data-m="fade" className="shrink-0">{action}</div>}
+    </div>
   );
 }

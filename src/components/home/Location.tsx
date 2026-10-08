@@ -29,13 +29,12 @@ export function Location() {
   return (
     <div className="grid overflow-hidden rounded-[28px] border border-line bg-white shadow-[var(--shadow-card)] lg:grid-cols-[1fr_1.2fr]">
       <Reveal className="p-7 md:p-10 lg:p-12">
-        <p className="eyebrow">Nous trouver</p>
-        <h2 className="t-h2 mt-4">Retrouvez-nous à Cotonou.</h2>
+        <h2 className="t-h2">Retrouvez-nous à Cotonou.</h2>
 
         <dl className="mt-8 grid gap-6">
           <div className="flex gap-4">
             <dt className="sr-only">Adresse</dt>
-            <MapPinIcon size={24} weight="duotone" className="mt-0.5 shrink-0 text-accent-2" />
+            <span data-m="pin" className="relative mt-0.5 grid size-6 shrink-0 place-items-center"><span data-ring aria-hidden className="absolute inset-0 rounded-full bg-accent/40 opacity-0" /><MapPinIcon size={24} weight="duotone" className="relative text-accent-2" /></span>
             <dd>
               <p className="font-semibold">{SITE.address.district} — Quartier {SITE.address.quarter}</p>
               <p className="text-steel">{SITE.address.landmark}</p>
@@ -51,7 +50,7 @@ export function Location() {
                   <span className={`size-1.5 rounded-full ${open ? "bg-emerald-500" : "bg-steel-2"}`} /> {open ? "Ouvert actuellement" : "Fermé actuellement"}
                 </span>
               )}
-              <ul className="grid gap-1.5">
+              <ul data-m="rows" className="grid gap-1.5">
                 {SITE.hours.map((h) => (
                   <li key={h.days} className="flex justify-between gap-6 border-b border-dashed border-line pb-1.5 text-[15px]">
                     <span>{h.days}</span><span className="tabular text-steel">{h.slots}</span>
