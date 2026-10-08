@@ -19,12 +19,15 @@ export function SmoothScroll() {
     if (reduce || touch) return;
     const lenis = new Lenis({ duration: 1.05, smoothWheel: true });
     lenis.on("scroll", ScrollTrigger.update);
+    // Exposé pour les retours en haut fluides (footer)
+    (window as unknown as { lenis?: Lenis }).lenis = lenis;
     const tick = (t: number) => lenis.raf(t * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
     return () => {
       gsap.ticker.remove(tick);
       lenis.destroy();
+      delete (window as unknown as { lenis?: Lenis }).lenis;
     };
   }, []);
   return null;
