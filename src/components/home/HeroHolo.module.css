@@ -84,7 +84,7 @@
   .scene { inset: -8% -16% -4% -16%; }
   .progress { display: none; }
   .badge { display: none; }
-  .controls { bottom: 8px; left: auto; right: 12px; transform: none; flex-direction: row; }
+  .controls { top: 10px; bottom: auto; left: auto; right: 12px; transform: none; flex-direction: row; }
   .dragHint { display: none; }
   .scrollHint { display: none; }
 }

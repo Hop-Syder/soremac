@@ -253,7 +253,7 @@ function Landscape() {
   const trees: { p: V3; s: number }[] = [
     { p: [-6.4, 0, 3.2], s: 1.1 },
     { p: [-6.8, 0, -1.6], s: 1.4 },
-    { p: [9.4, 0, 3.8], s: 0.9 },
+    { p: [9.8, 0, -2.6], s: 0.9 },
   ];
   return (
     <group>
@@ -402,6 +402,61 @@ function Tools() {
   );
 }
 
+/* ───────────── Matériaux déposés sur le chantier (terrasse) ───────────── */
+const supplyMat = {
+  terracotta: new THREE.MeshStandardMaterial({ color: "#b4552b", roughness: 0.75, metalness: 0 }),
+  bucket: new THREE.MeshPhysicalMaterial({ color: "#f4f6f8", roughness: 0.35, clearcoat: 0.6 }),
+  lids: ["#f2701d", "#2f6fb5", "#e9c46a", "#3f8f6b"].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.1 })),
+};
+
+function Supplies() {
+  // Tuiles canal en terre cuite, rangées en quinconce sur palette
+  const tiles = useMemo(() => {
+    const geo = new THREE.CylinderGeometry(0.11, 0.13, 0.42, 14, 1, true, 0, Math.PI);
+    const items: { p: V3; r: V3 }[] = [];
+    for (let l = 0; l < 4; l++) for (let i = 0; i < 5; i++) items.push({ p: [-0.36 + i * 0.18, 0.2 + l * 0.11, 0], r: [Math.PI / 2, 0, l % 2 ? Math.PI : 0] });
+    return { geo, items };
+  }, []);
+  return (
+    <group position={[5.3, 0.12, 0.2]}>
+      {/* Palette de cartons de carrelage */}
+      <group position={[0, 0, 0.9]}>
+        <Block size={[1.2, 0.12, 1]} position={[0, 0.06, 0]} material={truckMat.pallet} />
+        {[0, 1, 2].map((l) => [-0.29, 0.29].map((x) => (
+          <group key={`${l}${x}`} position={[x, 0.22 + l * 0.2, 0]}>
+            <Block size={[0.56, 0.19, 0.9]} position={[0, 0, 0]} material={truckMat.carton} />
+            <Block size={[0.57, 0.05, 0.91]} position={[0, 0.03, 0]} material={truckMat.paint} />
+          </group>
+        )))}
+      </group>
+      {/* Palette de tuiles */}
+      <group position={[0.2, 0, -1.2]}>
+        <Block size={[1.1, 0.12, 0.9]} position={[0, 0.06, 0]} material={truckMat.pallet} />
+        {[-0.22, 0.22].map((z) => (
+          <group key={z} position={[0, 0, z]}>
+            <Instances geometry={tiles.geo} material={supplyMat.terracotta} items={tiles.items} vary={0.15} />
+          </group>
+        ))}
+      </group>
+      {/* Pots de peinture */}
+      <group position={[1.35, 0, -0.1]}>
+        {[[0, 0], [0.38, 0.05], [0.18, 0.36], [0.56, 0.42], [0.1, 0.72]].map(([x, z], i) => (
+          <group key={i} position={[x, 0, z]}>
+            <mesh position={[0, 0.17, 0]} material={supplyMat.bucket} castShadow><cylinderGeometry args={[0.16, 0.14, 0.34, 20]} /></mesh>
+            <mesh position={[0, 0.345, 0]} material={supplyMat.lids[i % 4]}><cylinderGeometry args={[0.165, 0.165, 0.03, 20]} /></mesh>
+            <mesh position={[0, 0.17, 0]} material={supplyMat.lids[i % 4]}><cylinderGeometry args={[0.161, 0.151, 0.1, 20, 1, true]} /></mesh>
+          </group>
+        ))}
+        {/* Pile sur le dessus */}
+        <group position={[0.2, 0.36, 0.18]}>
+          <mesh position={[0, 0.17, 0]} material={supplyMat.bucket} castShadow><cylinderGeometry args={[0.16, 0.14, 0.34, 20]} /></mesh>
+          <mesh position={[0, 0.345, 0]} material={supplyMat.lids[1]}><cylinderGeometry args={[0.165, 0.165, 0.03, 20]} /></mesh>
+        </group>
+      </group>
+    </group>
+  );
+}
+
 /* ───────────── Camion de livraison SOREMAC (plateau chargé) ───────────── */
 const truckMat = {
   paint: new THREE.MeshPhysicalMaterial({ color: "#f2701d", roughness: 0.32, metalness: 0.35, clearcoat: 1, clearcoatRoughness: 0.12 }),
@@ -444,7 +499,7 @@ function Vehicle() {
     return { geo: new THREE.BoxGeometry(0.58, 0.18, 0.4), items };
   }, []);
   return (
-    <group position={[3.2, 0, -8.6]} rotation={[0, -0.12, 0]} scale={0.95}>
+    <group position={[10.6, 0, 3.4]} rotation={[0, Math.PI / 4 + 0.15, 0]} scale={0.95}>
       {/* Châssis + pare-chocs */}
       <Block size={[6.9, 0.28, 1.1]} position={[0, 0.82, 0]} material={truckMat.dark} />
       <Block size={[0.22, 0.32, 2.3]} position={[3.55, 0.72, 0]} material={truckMat.dark} />
@@ -573,13 +628,14 @@ export function House({ state, mobile }: { state: HeroState; mobile: boolean }) 
     <group position={[-1.5, 0, 0]}>
       <Upper />
       <Landscape />
+      <Supplies />
       {PARTS.filter((p) => !mobile || p.key !== "tools").map((p) => (
         <group key={p.key} ref={(g) => { if (g) groups.current[p.key] = g; }}>
           {p.node}
           {LABELS.filter((l) => l.key === p.key && (!mobile || l.mobile)).map((l) => <Label key={l.key} part={l} state={state} />)}
         </group>
       ))}
-      {!mobile && <Vehicle />}
+      <Vehicle />
     </group>
   );
 }
