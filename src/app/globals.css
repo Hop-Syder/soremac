@@ -145,3 +145,4 @@ html.lenis, html.lenis body { height: auto; }
 .holo360 button { height: 38px; min-width: 38px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #e0f7ff; font: 600 12px/1 var(--font-geist), sans-serif; letter-spacing: .06em; transition: background-color .2s, color .2s; }
 .holo360 button:hover { background: rgb(103 232 249 / .14); }
 .holo360 button[aria-pressed="true"] { background: #67e8f9; color: #06202b; }
+@media (max-width: 1023px) { .holo360 button[data-desktop] { display: none; } }

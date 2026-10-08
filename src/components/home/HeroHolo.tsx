@@ -223,12 +223,12 @@ export function HeroHolo() {
             {/* Contrôles 360° */}
             <div className={s.controls}>
               <div className="holo360" role="group" aria-label="Rotation de la maquette">
-                <button onClick={() => rotate(-1)} aria-label="Tourner vers la gauche" className="max-lg:hidden"><CaretLeftIcon size={16} weight="bold" /></button>
+                <button onClick={() => rotate(-1)} aria-label="Tourner vers la gauche" data-desktop><CaretLeftIcon size={16} weight="bold" /></button>
                 <button onClick={toggleAuto} aria-pressed={auto} aria-label={auto ? "Arrêter la rotation 360°" : "Lancer la rotation 360°"}>
                   <ArrowClockwiseIcon size={15} weight="bold" className={auto ? "animate-spin [animation-duration:3s]" : ""} /> 360°
                 </button>
-                <button onClick={() => rotate(1)} aria-label="Tourner vers la droite" className="max-lg:hidden"><CaretRightIcon size={16} weight="bold" /></button>
-                <button onClick={recenter} aria-label="Revenir à la vue de face" className="max-lg:hidden">Face</button>
+                <button onClick={() => rotate(1)} aria-label="Tourner vers la droite" data-desktop><CaretRightIcon size={16} weight="bold" /></button>
+                <button onClick={recenter} aria-label="Revenir à la vue de face" data-desktop>Face</button>
               </div>
               <p className={s.dragHint}><HandGrabbingIcon size={15} /> Glissez pour tourner</p>
             </div>
