@@ -16,10 +16,10 @@ export function Reassurance() {
   return (
     <section aria-label="Nos engagements" className="relative z-10">
       <div className="shell">
-        <Stagger className="grid gap-px overflow-hidden rounded-[20px] border border-line bg-line shadow-[var(--shadow-card)] sm:grid-cols-2 lg:grid-cols-4">
+        <Stagger data-m="pop" className="grid gap-px overflow-hidden rounded-[20px] border border-line bg-line shadow-[var(--shadow-card)] sm:grid-cols-2 lg:grid-cols-4">
           {items.map(({ icon: Icon, title, text }) => (
             <StaggerItem key={title} dir="left" className="flex items-center gap-4 bg-white p-5 md:p-6">
-              <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-2">
+              <span data-pop className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-2">
                 <Icon size={24} weight="duotone" />
               </span>
               <span>

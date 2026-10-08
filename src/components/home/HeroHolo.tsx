@@ -123,7 +123,6 @@ export function HeroHolo() {
           gsap
             .timeline({ defaults: { ease: "power3.out" } })
             .fromTo(q("[data-hero='stage']"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 1.4 }, 0)
-            .fromTo(q("[data-hero='eyebrow']"), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.5 }, 0.2)
             .set(q("[data-hero='line']"), { autoAlpha: 1 }, 0.3)
             .fromTo(q("[data-hero='line'] > span"), { yPercent: 110 }, { yPercent: 0, duration: 0.85, stagger: 0.09 }, 0.3)
             .fromTo(q("[data-hero='sub']"), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 0.7)
@@ -239,9 +238,7 @@ export function HeroHolo() {
       {/* Contenu (textes identiques) */}
       <div className={`${s.content} shell pointer-events-none flex flex-col justify-end pb-16 pt-32 lg:justify-center lg:pb-10 lg:pt-36`}>
         <div className="pointer-events-auto max-w-xl lg:w-[46%] lg:max-w-none">
-          <p data-hero="eyebrow" className="hero-init eyebrow eyebrow-dark">Matériaux de construction · Cotonou</p>
-
-          <h1 className="t-display mt-6 text-white">
+          <h1 className="t-display text-white">
             <span data-hero="line" className="hero-init block overflow-hidden pb-[0.06em]"><span className="block">Tout pour construire.</span></span>
             <span data-hero="line" className="hero-init block overflow-hidden pb-[0.06em]"><span className="block text-accent">Un seul partenaire.</span></span>
           </h1>

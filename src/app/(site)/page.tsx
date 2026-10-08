@@ -21,6 +21,7 @@ import { Location } from "@/components/home/Location";
 import { SectionHeader } from "@/components/sections/SectionHeader";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { ButtonLink } from "@/components/ui/Button";
+import { HomeMotion } from "@/components/motion/HomeMotion";
 import { featured as featuredOf, findProduct, getCatalog } from "@/lib/catalog/repo";
 
 export default async function HomePage() {
@@ -31,7 +32,7 @@ export default async function HomePage() {
   const showcase = picked.length === 3 ? picked : featured.slice(0, 3);
 
   return (
-    <>
+    <HomeMotion>
       {/* 02 — Hero holographique */}
       <HeroHolo />
 
@@ -42,7 +43,6 @@ export default async function HomePage() {
       <section className="section">
         <div className="shell">
           <SectionHeader
-            eyebrow={`${catalog.categories.length} familles de produits`}
             title="Tout pour votre chantier."
             intro="Du gros œuvre aux finitions, trouvez rapidement les matériaux et équipements adaptés à votre projet."
             action={<ButtonLink href="/produits" variant="outline">Tout le catalogue <ArrowRightIcon size={16} weight="bold" /></ButtonLink>}
@@ -55,7 +55,6 @@ export default async function HomePage() {
       <section className="section bg-white">
         <div className="shell">
           <SectionHeader
-            eyebrow="À la une"
             title="Les produits recherchés."
             intro="Les références que nos clients demandent le plus. Choisissez votre variante et ajoutez-la à votre devis."
           />
@@ -71,7 +70,7 @@ export default async function HomePage() {
       {/* 07 — Profils clients */}
       <section className="section pt-0">
         <div className="shell">
-          <SectionHeader eyebrow="Pour qui ?" title="Un catalogue pensé pour vous." intro="Particulier, artisan, entreprise ou promoteur : une seule adresse, le bon accompagnement." />
+          <SectionHeader title="Un catalogue pensé pour vous." intro="Particulier, artisan, entreprise ou promoteur : une seule adresse, le bon accompagnement." />
           <Profiles />
         </div>
       </section>
@@ -79,7 +78,7 @@ export default async function HomePage() {
       {/* 08 — Pourquoi SOREMAC */}
       <section className="section bg-white">
         <div className="shell">
-          <SectionHeader eyebrow="Pourquoi SOREMAC" title="L'expérience qui accompagne vos projets." />
+          <SectionHeader title="L'expérience qui accompagne vos projets." />
           <WhySoremac />
         </div>
       </section>
@@ -87,7 +86,7 @@ export default async function HomePage() {
       {/* 09 — Services */}
       <section className="section bg-ink">
         <div className="shell">
-          <SectionHeader tone="dark" eyebrow="Services" title="Plus que des matériaux. Un accompagnement." />
+          <SectionHeader tone="dark" title="Plus que des matériaux. Un accompagnement." />
           <ServicesScroll />
         </div>
       </section>
@@ -95,7 +94,7 @@ export default async function HomePage() {
       {/* 10 — Sélection & marques */}
       <section className="section">
         <div className="shell">
-          <SectionHeader eyebrow="Sélection" title="Des produits sélectionnés pour vos travaux." />
+          <SectionHeader title="Des produits sélectionnés pour vos travaux." />
           <BrandShowcase products={showcase} />
         </div>
       </section>
@@ -112,6 +111,6 @@ export default async function HomePage() {
 
       {/* 13 — CTA */}
       <CtaBand />
-    </>
+    </HomeMotion>
   );
 }

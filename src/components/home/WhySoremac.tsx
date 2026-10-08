@@ -20,9 +20,8 @@ export function WhySoremac() {
     <div className="grid gap-4 lg:grid-cols-[0.9fr_1.6fr]">
       <Reveal className="relative flex flex-col justify-between overflow-hidden rounded-[24px] bg-ink p-8 text-white md:p-10">
         <div aria-hidden className="pointer-events-none absolute -bottom-20 -right-20 size-72 rounded-full bg-accent/30 blur-[80px]" />
-        <p className="eyebrow eyebrow-dark self-start">Depuis {SITE.foundedYear}</p>
-        <div className="relative mt-16">
-          <p className="tabular font-display text-[clamp(6rem,12vw,9.5rem)] font-bold leading-[0.8] tracking-[-0.06em] text-accent">{yearsOfExperience()}</p>
+        <div className="relative mt-auto pt-10">
+          <p className="tabular font-display text-[clamp(6rem,12vw,9.5rem)] font-bold leading-[0.8] tracking-[-0.06em] text-accent" data-m="count" data-to={yearsOfExperience()}>{yearsOfExperience()}</p>
           <p className="mt-4 font-display text-2xl font-semibold tracking-tight">ans au service de la construction au Bénin.</p>
           <p className="mt-3 text-white/60">Une entreprise historique, une expérience d'achat moderne.</p>
         </div>
